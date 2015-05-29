@@ -2,8 +2,8 @@ package com.razware.blast3r;
 
 import com.esotericsoftware.minlog.Log;
 import com.razware.blast3r.models.Target;
-import strikeapi.Strike;
-import strikeapi.Torrent;
+import com.razware.blast3r.strikeapi.Strike;
+import com.razware.blast3r.strikeapi.Torrent;
 
 import java.io.BufferedReader;
 import java.io.IOException;

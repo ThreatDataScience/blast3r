@@ -10,7 +10,7 @@ import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
-import strikeapi.Torrent;
+import com.razware.blast3r.strikeapi.Torrent;
 
 import java.io.File;
 import java.io.IOException;

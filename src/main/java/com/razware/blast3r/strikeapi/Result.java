@@ -1,4 +1,4 @@
-package strikeapi;
+package com.razware.blast3r.strikeapi;
 
 import com.google.gson.annotations.Expose;
 

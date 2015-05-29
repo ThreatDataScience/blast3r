@@ -1,7 +1,7 @@
 package com.razware.blast3r.models;
 
 import com.google.gson.annotations.Expose;
-import strikeapi.Torrent;
+import com.razware.blast3r.strikeapi.Torrent;
 
 import java.util.ArrayList;
 import java.util.List;
