@@ -2,6 +2,7 @@ package com.razware.blast3r.system;
 
 import com.google.gson.annotations.Expose;
 import com.razware.blast3r.Main;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.util.ArrayList;
@@ -16,10 +17,7 @@ public class Config {
     @Option(name = "--target-directory", aliases = {"-td"}, usage = "The directory which holds the target files")
     public String targetDirectory = "targets/";
     @Expose
-    @Option(name = "--hash", usage = "The hashs to look up")
-    public List<String> hashes = new ArrayList<String>();
-    @Expose
-    @Option(name = "--target-file", aliases = {"-tf"}, usage = "The names of the target files to load")
+    @Argument(usage = "The names of the target files to load")
     public List<String> targets = new ArrayList<String>();
     public boolean loadTargetsFromFiles = false;
     @Expose

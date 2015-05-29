@@ -4,13 +4,13 @@ import com.esotericsoftware.minlog.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.razware.blast3r.models.Target;
+import com.razware.blast3r.strikeapi.Torrent;
 import com.razware.blast3r.system.Config;
 import org.apache.commons.io.FileUtils;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
-import com.razware.blast3r.strikeapi.Torrent;
 
 import java.io.File;
 import java.io.IOException;
@@ -101,20 +101,22 @@ public class Main {
             }
             Log.info("(" + torrents.size() + ") torrents found");
             for (Torrent torrent : torrents) {
-                List<String> peers = blast3r.getPeers(torrent);
-                for (String peer : peers) {
-                    torrent.peers.add(peer);
-                    File file = new File(config.dataDirectory + target.name + "/" + torrent.torrent_hash + ".json");
-                    if (file.exists()) {
-                        Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
-                        for (String p : torrent1.peers) {
-                            torrent.peers.add(p);
-                        }
-                        file.delete();
+                if (config.getPeers) {
+                    List<String> peers = blast3r.getPeers(torrent);
+                    for (String peer : peers) {
+                        torrent.peers.add(peer);
                     }
-                    file.createNewFile();
-                    FileUtils.writeStringToFile(file, getGson().toJson(torrent));
                 }
+                File file = new File(config.dataDirectory + target.name + "/" + torrent.torrent_hash + ".json");
+                if (file.exists()) {
+                    Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
+                    for (String p : torrent1.peers) {
+                        torrent.peers.add(p);
+                    }
+                    file.delete();
+                }
+                file.createNewFile();
+                FileUtils.writeStringToFile(file, getGson().toJson(torrent));
             }
             target.torrents.addAll(torrents);
         }
@@ -212,7 +214,7 @@ public class Main {
         public static boolean isSupported(OS os) {
             switch (os) {
                 case Windows:
-                    return true;
+                    return false;
                 case Mac:
                     return true;
                 case Unix:
