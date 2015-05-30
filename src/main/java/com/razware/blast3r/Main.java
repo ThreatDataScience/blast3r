@@ -306,9 +306,13 @@ public class Main {
             }
         }
         System.out.println("Usage:");
-        System.out.println("\t java -jar blast3r.jar [OPTIONS] [TARGET FILE NAMES]\n");
+        System.out.println("\t java -jar blast3r.jar [OPTIONS]\n");
         System.out.println("Options: \n");
         (new CmdLineParser(new Config())).printUsage(System.out);
+        System.out.println("Examples: \n");
+        System.out.println("\t java -jar blast3r.jar -q \"ubuntu 14.04\" --peers --proxy --proxy-ip localhost --proxy-port 1080\n");
+        System.out.println("Would search for torrent with the query \"ubuntu 14.04\", and useing the socks proxy provided.\n" +
+                "(NOTE: nmap and ttorrent traffic isn't routed through the proxy, so don't use --peers)\n");
     }
 
     public static void exit(int x) {
