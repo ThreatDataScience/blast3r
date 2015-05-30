@@ -215,12 +215,16 @@ public class Main {
                     //If we;ve already seen it
                     if (file.exists()) {
                         Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
+                        int z = 0;
                         //Load the peers from the exisitng json and save the new data
                         if (torrent1 != null && torrent1.getPeers() != null && torrent1.getPeers().size() > 0) {
                             for (String p : torrent1.getPeers()) {
-                                torrent.getPeers().add(p);
+                                if (torrent.getPeers().contains(p)) {
+                                    torrent.getPeers().add(p);
+                                    z++;
+                                }
                             }
-                            Log.info("loaded (" + torrent1.getPeers().size() + ") existing peers records for \"" + torrent.getTorrent_hash() + "\"");
+                            Log.info("loaded (" + z + ") unqiue existing peers records for \"" + torrent.getTorrent_hash() + "\"");
                         }
                         file.delete();
                     }

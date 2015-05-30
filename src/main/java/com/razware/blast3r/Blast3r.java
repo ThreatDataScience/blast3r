@@ -37,6 +37,11 @@ public class Blast3r {
 
     public static List<Client> clients = new ArrayList<Client>();
     public Strike strike = new Strike();
+    Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
+        public void uncaughtException(Thread th, Throwable ex) {
+            System.out.println("Uncaught exception: " + ex);
+        }
+    };
 
     public Blast3r() {
 
@@ -100,7 +105,6 @@ public class Blast3r {
         download(website, torrentFile);
     }
 
-
     private void download(URL url, File torrentFile) throws IOException {
         FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
         Log.debug("Downloading with URL: " + url.toString());
@@ -129,9 +133,16 @@ public class Blast3r {
         download(website, torrentFile);
     }
 
-
     public List<String> getPeers(Torrent torrent) throws IOException {
+        Log.info("ttorrent", "getting peers for \"" + torrent.getTorrent_hash() + "\"");
         try {
+            FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
+            //Delete the downloaded data
+            FileUtils.forceDelete(new File(Main.getConfig().downloadDirectory));
+            while (new File(Main.getConfig().downloadDirectory).exists()) {
+                Log.info("ttorrent", "sleeping for " + 5 + " seconds for downloaded torrent content to be deleted...");
+                Thread.sleep(5000);
+            }
             //create the required directories
             FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
             List<String> ips = new UniqueList<String>();
@@ -146,7 +157,7 @@ public class Blast3r {
             while (ips.size() < Main.getConfig().ttorrentSleepPeerCount && x <= Main.getConfig().ttorrentSleepCount) {
                 x++;
                 Log.info("ttorrent", "sleeping " + Main.getConfig().ttorrentSleep / 1000 + " seconds to wait for peers, have (" + client.getPeers().size() + ") of the minimum (" + Main.getConfig().ttorrentSleepPeerCount + ")");
-                Thread.currentThread().sleep(Main.getConfig().ttorrentSleep);
+                Thread.sleep(Main.getConfig().ttorrentSleep);
                 for (Peer peer : client.getPeers()) {
                     //If it's a unique peer, log message and add IP
                     if (!ips.contains(peer.getIp())) {
@@ -154,14 +165,14 @@ public class Blast3r {
                         ips.add(peer.getIp());
                     }
                 }
-
             }
             Log.info("ttorrent", "(" + ips.size() + ") peers found");
             //Stop the download
-            client.getTorrent().stop();
             client.stop();
-            //Delete the downloaded data
-            FileUtils.forceDelete(new File(Main.getConfig().downloadDirectory));
+            while (!client.getState().equals(Client.ClientState.ERROR)) {
+                Log.info("ttorrent", "sleeping for 5 seconds to let ttorrent client stop...");
+                Thread.sleep(5000);
+            }
             //If we got too little ips
             if (ips.size() < Main.getConfig().ttorrentSleepPeerCount) {
                 Log.warn("not enough peers found via ttorrent, falling back to nmap to discover peers");
