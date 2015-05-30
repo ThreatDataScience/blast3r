@@ -9,7 +9,6 @@ package com.razware.blast3r.system;
 
 import com.google.gson.annotations.Expose;
 import com.razware.blast3r.Main;
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.util.ArrayList;
@@ -18,10 +17,13 @@ import java.util.List;
 public class Config {
 
     @Expose
-    @Option(name = "--hash", usage = "Run a search with the specified info hashes as targets.")
+    @Option(name = "--loop", usage = "If blast3r should loop (update peer lists) until ctrl+C")
+    public boolean loop = false;
+    @Expose
+    @Option(name = "--hash", aliases = "-h", usage = "Run a search with the specified info hashes as targets.")
     public List<String> hashes = new ArrayList<String>();
     @Expose
-    @Option(name = "--query", usage = "Run a search with the specified query strings as targets.")
+    @Option(name = "--query", aliases = "-q", usage = "Run a search with the specified query strings as targets.")
     public List<String> queries = new ArrayList<String>();
     @Expose
     @Option(name = "--delete-torrents-on-exit", aliases = {"-dtoe"}, usage = "If blast3r should delete the downloaded torrent files on exit")
@@ -63,7 +65,7 @@ public class Config {
     @Option(name = "--target-directory", aliases = {"-td"}, usage = "The directory which holds the target files")
     public String targetDirectory = "targets/";
     @Expose
-    @Argument(usage = "The names of the target files to load")
+    @Option(name = "--target", aliases = "-t", usage = "The names of the target files to load")
     public List<String> targets = new ArrayList<String>();
     public boolean loadTargetsFromFiles = false;
     @Expose
@@ -74,7 +76,7 @@ public class Config {
     @Expose
     @Option(name = "--disable-nmap", usage = "disables using nmap to scan for peers")
     public boolean disableNmap = false;
-    @Option(name = "--help", aliases = {"-h", "--?", "-?"}, usage = "Display this help text and exit", help = true)
+    @Option(name = "--help", aliases = {"--?", "-?"}, usage = "Display this help text and exit", help = true)
     private boolean help = false;
     @Option(name = "--save-config", usage = "Saves the provided config to disk")
     private boolean saveConfig = false;

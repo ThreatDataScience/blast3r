@@ -136,12 +136,12 @@ public class Main {
 
         //Initialize the log4j appenders
         initLog4J();
-
         //Define instance
         blast3r = new Blast3r();
 
         //Gather targets
         List<Target> targets = new ArrayList<Target>();
+
         if (!config.queries.isEmpty()) {
             for (String query : config.queries) {
                 Target target = new Target();
@@ -171,56 +171,61 @@ public class Main {
                 }
             }
         }
-
-        //for each target
-        for (Target target : targets) {
-
-            //Create the target's data directory
-            File dir = new File(config.dataDirectory + target.name + "/");
-            FileUtils.forceMkdir(dir);
-
-            //Get a list of Torrent objects
-            List<Torrent> torrents;
-            //If target is a hash, run a single lookup
-            if (target.hash) {
-                Log.info("looking up \"" + target.query + "\"");
-                torrents = blast3r.info(new String[]{target.query});
-            } else {
-                //Else it's a search string, and we want to look it up
-                Log.info("searching for \"" + target.query + "\"");
-                torrents = blast3r.search(target);
+        boolean x = true;
+        while (x) {
+            if (!Main.config.loop) {
+                x = false;
             }
-            Log.info("(" + torrents.size() + ") torrents found");
+            //for each target
+            for (Target target : targets) {
 
-            //For each of the torrents,
-            for (Torrent torrent : torrents) {
-                if (config.getPeers) {
-                    List<String> peers = blast3r.getPeers(torrent);
-                    for (String peer : peers) {
-                        torrent.getPeers().add(peer);
-                    }
+                //Create the target's data directory
+                File dir = new File(config.dataDirectory + target.name + "/");
+                FileUtils.forceMkdir(dir);
+
+                //Get a list of Torrent objects
+                List<Torrent> torrents;
+                //If target is a hash, run a single lookup
+                if (target.hash) {
+                    Log.info("looking up \"" + target.query + "\"");
+                    torrents = blast3r.info(new String[]{target.query});
+                } else {
+                    //Else it's a search string, and we want to look it up
+                    Log.info("searching for \"" + target.query + "\"");
+                    torrents = blast3r.search(target);
                 }
+                Log.info("(" + torrents.size() + ") torrents found");
 
-                //Write the torrent json to disk
-                File file = new File(config.dataDirectory + target.name + "/" + torrent.getTorrent_hash() + ".json");
-                //If we;ve already seen it
-                if (file.exists()) {
-                    Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
-                    //Load the peers from the exisitng json and save the new data
-                    if (torrent1 != null && torrent1.getPeers() != null && torrent1.getPeers().size() > 0) {
-                        for (String p : torrent1.getPeers()) {
-                            torrent.getPeers().add(p);
+                //For each of the torrents,
+                for (Torrent torrent : torrents) {
+                    if (config.getPeers) {
+                        List<String> peers = blast3r.getPeers(torrent);
+                        for (String peer : peers) {
+                            torrent.getPeers().add(peer);
                         }
-                        Log.info("loaded (" + torrent1.getPeers().size() + ") existing peers records for \"" + torrent.getTorrent_hash() + "\"");
                     }
-                    file.delete();
+
+                    //Write the torrent json to disk
+                    File file = new File(config.dataDirectory + target.name + "/" + torrent.getTorrent_hash() + ".json");
+                    //If we;ve already seen it
+                    if (file.exists()) {
+                        Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
+                        //Load the peers from the exisitng json and save the new data
+                        if (torrent1 != null && torrent1.getPeers() != null && torrent1.getPeers().size() > 0) {
+                            for (String p : torrent1.getPeers()) {
+                                torrent.getPeers().add(p);
+                            }
+                            Log.info("loaded (" + torrent1.getPeers().size() + ") existing peers records for \"" + torrent.getTorrent_hash() + "\"");
+                        }
+                        file.delete();
+                    }
+                    file.createNewFile();
+                    FileUtils.writeStringToFile(file, getGson().toJson(torrent));
                 }
-                file.createNewFile();
-                FileUtils.writeStringToFile(file, getGson().toJson(torrent));
+                //Save all torrents to the target for single file export
+                //target.torrents.addAll(torrents);
+                //Need to impliment
             }
-            //Save all torrents to the target for single file export
-            //target.torrents.addAll(torrents);
-            //Need to impliment
         }
     }
 

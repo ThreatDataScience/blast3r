@@ -50,6 +50,7 @@ public class Strike {
         URL url = new URL(Main.getConfig().apiUrl + string);
         URLConnection connection = url.openConnection();
         connection.setRequestProperty("User-Agent", Main.getConfig().userAgent);
+        connection.setConnectTimeout(60000);
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         StringBuilder response = new StringBuilder();
         String inputLine;
