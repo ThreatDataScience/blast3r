@@ -11,7 +11,19 @@ import java.util.List;
 public class Config {
 
     @Expose
-    @Option(name = "--data-directory", aliases = {"-dd"}, usage = "The directory that holds the data files")
+    @Option(name = "--download-directory", aliases = {"-downd"}, usage = "The directory that holds the downloaded files")
+    public String downloadDirectory = "downloads/";
+    @Expose
+    @Option(name = "--ttorrent-sleep", aliases = {"-ts"}, usage = "The time in seconds to sleep to wait for peers")
+    public int ttorrentSleep = 30000;
+    @Expose
+    @Option(name = "--ttorrent-sleep-count", aliases = {"-tsc"}, usage = "The number of times to let ttorrent sleep to find peers before moving on")
+    public int ttorrentSleepCount = 3;
+    @Expose
+    @Option(name = "--ttorrent-sleep-peer-count", aliases = "-tspc", usage = "The minimum nuber of peers for ttorrent to have before not sleeping.")
+    public int ttorrentSleepPeerCount = 1;
+    @Expose
+    @Option(name = "--data-directory", aliases = {"-datad"}, usage = "The directory that holds the data files")
     public String dataDirectory = "data/";
     @Expose
     @Option(name = "--target-directory", aliases = {"-td"}, usage = "The directory which holds the target files")

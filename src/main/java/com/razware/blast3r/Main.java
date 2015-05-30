@@ -6,7 +6,9 @@ import com.google.gson.GsonBuilder;
 import com.razware.blast3r.models.Target;
 import com.razware.blast3r.strikeapi.Torrent;
 import com.razware.blast3r.system.Config;
+import com.turn.ttorrent.client.Client;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.*;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.kohsuke.args4j.CmdLineException;
@@ -17,7 +19,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -36,7 +37,8 @@ public class Main {
     private static Config config = new Config();
     private static CmdLineParser cmdLineParser;
     private static String configPath = "config.json";
-    private static Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
 
     public static void clearScreen() {
         Ansi ansi = new Ansi();
@@ -74,6 +76,7 @@ public class Main {
             exit(0);
         }
         Log.trace("starting");
+        initLog4J();
         blast3r = new Blast3r();
         List<Target> targets = new ArrayList<Target>();
         if (config.loadTargetsFromFiles) {
@@ -94,7 +97,7 @@ public class Main {
             List<Torrent> torrents = new ArrayList<Torrent>();
             if (target.hash) {
                 Log.info("looking up " + target.query);
-                torrents = Arrays.asList(blast3r.info(new String[]{target.query}));
+                torrents = blast3r.info(new String[]{target.query});
             } else {
                 Log.info("searching for " + target.query);
                 torrents = blast3r.search(target);
@@ -104,14 +107,14 @@ public class Main {
                 if (config.getPeers) {
                     List<String> peers = blast3r.getPeers(torrent);
                     for (String peer : peers) {
-                        torrent.peers.add(peer);
+                        torrent.getPeers().add(peer);
                     }
                 }
-                File file = new File(config.dataDirectory + target.name + "/" + torrent.torrent_hash + ".json");
+                File file = new File(config.dataDirectory + target.name + "/" + torrent.getTorrent_hash() + ".json");
                 if (file.exists()) {
                     Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
-                    for (String p : torrent1.peers) {
-                        torrent.peers.add(p);
+                    for (String p : torrent1.getPeers()) {
+                        torrent.getPeers().add(p);
                     }
                     file.delete();
                 }
@@ -135,6 +138,29 @@ public class Main {
         } else {
             Log.debug("configuration file does not exist");
             config = new Config();
+        }
+    }
+
+    private static void initLog4J() {
+        ConsoleAppender console = new ConsoleAppender(); //create appender
+        //configure the appender
+        String PATTERN = "%d [%p|%c|%C{1}] %m%n";
+        console.setLayout(new PatternLayout(PATTERN));
+        console.setThreshold(Level.ERROR);
+        console.activateOptions();
+        //add appender to any Logger (here is root)
+        Logger.getRootLogger().addAppender(console);
+        if (config.isFileLog()) {
+            FileAppender fileLog = new FileAppender();
+            fileLog.setName("FileLogger");
+            fileLog.setFile(config.getLogFile());
+            fileLog.setLayout(new PatternLayout("%d %-5p [%c{1}] %m%n"));
+            fileLog.setThreshold(Level.INFO);
+            fileLog.setAppend(true);
+            fileLog.activateOptions();
+
+            //add appender to any Logger (here is root)
+            Logger.getRootLogger().addAppender(fileLog);
         }
     }
 
@@ -253,6 +279,14 @@ public class Main {
 
         public void start() {
             Log.trace("starting " + threadName);
+            try {
+                FileUtils.forceDeleteOnExit(new File(getConfig().downloadDirectory));
+            } catch (IOException e) {
+                Log.error(e.getMessage(), e);
+            }
+            for (Client client : Blast3r.clients) {
+                client.stop();
+            }
             if (Main.getConfig().isSaveConfig()) {
                 Main.saveConfig();
             }

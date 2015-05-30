@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.List;
 
 public class Strike {
 
@@ -18,14 +19,14 @@ public class Strike {
     private Gson gson;
 
     {
-        gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+        gson = new GsonBuilder().setPrettyPrinting().create();
     }
 
     public Strike() {
 
     }
 
-    public Torrent[] info(String[] hash) throws Exception {
+    public List<Torrent> info(String[] hash) throws Exception {
         String endpoint = "torrents/info/";
         String hashes = "";
         boolean first = true;
@@ -37,7 +38,7 @@ public class Strike {
             }
             hashes += ha;
         }
-        return gson.fromJson(query(endpoint + "?hashes=" + hashes), Result.class).torrents;
+        return gson.fromJson(query(endpoint + "?hashes=" + hashes), Result.class).getTorrents();
     }
 
     private String query(String string) throws Exception {
@@ -60,7 +61,7 @@ public class Strike {
         return Base64.base64Decode(description.message);
     }
 
-    public Torrent[] search(String query, String category, String subcategory) throws Exception {
+    public List<Torrent> search(String query, String category, String subcategory) throws Exception {
         String endpoint = "torrents/search/";
         if (category != null && !category.equals("")) {
             endpoint += "?category=" + category + "&";
@@ -70,21 +71,21 @@ public class Strike {
         } else {
             endpoint += "?";
         }
-        return gson.fromJson(query(endpoint + "phrase=" + URLEncoder.encode(query)), Result.class).torrents;
+        return gson.fromJson(query(endpoint + "phrase=" + URLEncoder.encode(query)), Result.class).getTorrents();
     }
 
-    public Torrent[] top(String category, String subcategory) throws Exception {
+    public List<Torrent> top(String category, String subcategory) throws Exception {
         String endpoint = "torrents/search/";
         endpoint += "?category=" + category + "&";
         if (subcategory != null && !subcategory.equals("")) {
             endpoint += "subcategory=" + subcategory;
         }
-        return gson.fromJson(query(endpoint), Result.class).torrents;
+        return gson.fromJson(query(endpoint), Result.class).getTorrents();
     }
 
     public int countTotal() throws Exception {
         String endpoint = "torrents/count/";
-        return Integer.parseInt(gson.fromJson(query(endpoint), Result.class).message);
+        return Integer.parseInt(gson.fromJson(query(endpoint), Result.class).getMessage());
     }
 
     class Description {
