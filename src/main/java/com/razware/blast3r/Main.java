@@ -301,6 +301,12 @@ public class Main {
         System.out.println(SUMMARY + "\n");
         if (config.info) {
             System.out.println(USAGE_INFO + "\n");
+            System.out.println("Examples: \n");
+            System.out.println("\t java -jar blast3r.jar -q \"ubuntu 14.04\" --peers --proxy --proxy-ip localhost --proxy-port 1080\n");
+            System.out.println("Would search for torrent with the query \"ubuntu 14.04\", and using the socks proxy provided,\n" +
+                    "download the required torrent information, download the torrent file i possible, and them discover\\n" +
+                    "as many peers as possible (user defined minimum an timeout)." +
+                    "(NOTE: nmap and ttorrent traffic isn't routed through the proxy, so don't use --peers)\n");
             if (config.getLogLevel().equals(MyLog.LogLevel.DEBUG)) {
                 System.out.println(NOTES + "\n");
             }
@@ -309,10 +315,6 @@ public class Main {
         System.out.println("\t java -jar blast3r.jar [OPTIONS]\n");
         System.out.println("Options: \n");
         (new CmdLineParser(new Config())).printUsage(System.out);
-        System.out.println("Examples: \n");
-        System.out.println("\t java -jar blast3r.jar -q \"ubuntu 14.04\" --peers --proxy --proxy-ip localhost --proxy-port 1080\n");
-        System.out.println("Would search for torrent with the query \"ubuntu 14.04\", and useing the socks proxy provided.\n" +
-                "(NOTE: nmap and ttorrent traffic isn't routed through the proxy, so don't use --peers)\n");
     }
 
     public static void exit(int x) {
