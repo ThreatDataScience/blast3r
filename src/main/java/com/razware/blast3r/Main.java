@@ -204,6 +204,8 @@ public class Main {
                 System.out.println(notes + "\n");
             }
         }
+        System.out.println("Usage:");
+        System.out.println("\t java -jar blast3r.jar [OPTIONS] [TARGET FILE NAMES]\n");
         System.out.println("Options: \n");
         (new CmdLineParser(new Config())).printUsage(System.out);
     }

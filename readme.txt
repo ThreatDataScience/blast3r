@@ -1,9 +1,9 @@
-___.   .__                   __ ________
-\_ |__ |  | _____    _______/  |\_____  \______
+___.   .__                   __ ________        
+\_ |__ |  | _____    _______/  |\_____  \______ 
  | __ \|  | \__  \  /  ___/\   __\_(__  <_  __ \
  | \_\ \  |__/ __ \_\___ \  |  | /       \  | \/
- |___  /____(____  /____  > |__|/______  /__|
-     \/          \/     \/             \/
+ |___  /____(____  /____  > |__|/______  /__|   
+     \/          \/     \/             \/       
 version 0
 	(C) 2015 Andrew Breksa [abreksa4@gmail.com]
 
@@ -13,7 +13,16 @@ blast3r uses various open source technologies and data sources, including:
 and requires nmap for some optional functionality (https://nmap.org/).
 See the "--disable-nmap" option.
 
-Options:
+blast3r is a tool for finding torrents via json defined "targets" that contain 
+a query (or info hash), and optional category and subcategory strings. The gathered
+information is saved in json files in the --data-directiry. 
+When blast3r looks up peers for a torrent, if a json file exists for it
+already, those peers are loaded, and added if unique to the new list.
+
+Usage:
+	 java -jar blast3r.jar [OPTIONS] [TARGET FILE NAMES]
+
+Options: 
 
  VAL                                    : The names of the target files to load
  --data-directory (-datad) VAL          : The directory that holds the data
@@ -28,7 +37,7 @@ Options:
                                           output (default: false)
  --log-file VAL                         : The log file (default: log.log)
  --log-level (-ll) [NONE | ERROR |      : The log level (default: INFO)
- WARN | INFO | DEBUG | TRACE]
+ WARN | INFO | DEBUG | TRACE]              
  --log-to-file (-l2f)                   : If blast3r should log to a file
                                           (default: false)
  --nmap-coomand-line VAL                : The nmap command line to use to
@@ -41,6 +50,8 @@ Options:
                                           (default: false)
  --save-config                          : Saves the provided config to disk
                                           (default: false)
+ --strike-api-url VAL                   : The strike api base url (default:
+                                          https://getstrike.net/api/v2/)
  --strike-download-url VAL              : The strike download url (default:
                                           https://getstrike.net/torrents/api/dow
                                           nload/%s.torrent)
