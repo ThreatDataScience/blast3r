@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2015 Razware Software Design
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Andrew Breksa (abreksa4@gmail.com) 5/29/2015
+ */
+
 package com.razware.blast3r;
 
 import com.esotericsoftware.minlog.Log;
@@ -6,7 +13,9 @@ import com.google.gson.GsonBuilder;
 import com.razware.blast3r.models.Target;
 import com.razware.blast3r.strikeapi.Torrent;
 import com.razware.blast3r.system.Config;
-import com.turn.ttorrent.client.Client;
+import com.razware.blast3r.system.MyLog;
+import com.razware.blast3r.system.OS;
+import com.razware.blast3r.system.ShutdownHook;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.*;
 import org.fusesource.jansi.Ansi;
@@ -16,12 +25,12 @@ import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+/**
+ * The type Main.
+ */
 public class Main {
 
     public static final String NAME = "blast3r";
@@ -59,12 +68,14 @@ public class Main {
             "\tttorrent   (http://mpetazzoni.github.io/ttorrent/),\n" +
             "\tStrike API (https://getstrike.net/api/)\n" +
             "\tand requires nmap for some optional functionality (https://nmap.org/).\n";
+
     public static final OS os = OS.getOS();
     public static Blast3r blast3r;
     private static Config config = new Config();
-    private static CmdLineParser cmdLineParser;
     private static String configPath = "config.json";
+    private static CmdLineParser cmdLineParser;
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
 
     public static void clearScreen() {
         Ansi ansi = new Ansi();
@@ -72,16 +83,23 @@ public class Main {
     }
 
     public static void main(String[] args) throws Exception {
+        //Application setup
         AnsiConsole.systemInstall();
         clearScreen();
         printBanner();
         Log.setLogger(new MyLog());
         Log.set(getConfig().getLogLevel().getLevel());
         Runtime.getRuntime().addShutdownHook(new ShutdownHook("shutdown-hook"));
+
+        //Detect supported OS
         if (!OS.isSupported(os)) {
             System.out.println(os.name() + " is not supported as of version " + VERSION);
         }
+
+        //Load config from disk
         loadConfig();
+
+        //Parse command line params
         cmdLineParser = new CmdLineParser(getConfig());
         try {
             getCmdLineParser().parseArgument(args);
@@ -96,19 +114,33 @@ public class Main {
             Log.error(e.getMessage());
             exit(1);
         }
+
+        //Set the log level
         Log.set(config.getLogLevel().getLevel());
+
+        //If is help
         if (getConfig().isHelp()) {
             printUsage();
             exit(0);
         }
-        if (config.targets.isEmpty() && config.queries.isEmpty()) {
+
+        //If there are no targets whatsoever
+        if (config.targets.isEmpty() && config.queries.isEmpty() && config.hashes.isEmpty()) {
             Log.error("you must provide at least one hash, target, or query");
             printUsage();
             exit(1);
         }
+
+        //Being the application
         Log.trace("starting");
+
+        //Initialize the log4j appenders
         initLog4J();
+
+        //Define instance
         blast3r = new Blast3r();
+
+        //Gather targets
         List<Target> targets = new ArrayList<Target>();
         if (!config.queries.isEmpty()) {
             for (String query : config.queries) {
@@ -139,18 +171,28 @@ public class Main {
                 }
             }
         }
+
+        //for each target
         for (Target target : targets) {
+
+            //Create the target's data directory
             File dir = new File(config.dataDirectory + target.name + "/");
             FileUtils.forceMkdir(dir);
+
+            //Get a list of Torrent objects
             List<Torrent> torrents;
+            //If target is a hash, run a single lookup
             if (target.hash) {
                 Log.info("looking up \"" + target.query + "\"");
                 torrents = blast3r.info(new String[]{target.query});
             } else {
+                //Else it's a search string, and we want to look it up
                 Log.info("searching for \"" + target.query + "\"");
                 torrents = blast3r.search(target);
             }
             Log.info("(" + torrents.size() + ") torrents found");
+
+            //For each of the torrents,
             for (Torrent torrent : torrents) {
                 if (config.getPeers) {
                     List<String> peers = blast3r.getPeers(torrent);
@@ -158,9 +200,13 @@ public class Main {
                         torrent.getPeers().add(peer);
                     }
                 }
+
+                //Write the torrent json to disk
                 File file = new File(config.dataDirectory + target.name + "/" + torrent.getTorrent_hash() + ".json");
+                //If we;ve already seen it
                 if (file.exists()) {
                     Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
+                    //Load the peers from the exisitng json and save the new data
                     if (torrent1 != null && torrent1.getPeers() != null && torrent1.getPeers().size() > 0) {
                         for (String p : torrent1.getPeers()) {
                             torrent.getPeers().add(p);
@@ -172,7 +218,9 @@ public class Main {
                 file.createNewFile();
                 FileUtils.writeStringToFile(file, getGson().toJson(torrent));
             }
-            target.torrents.addAll(torrents);
+            //Save all torrents to the target for single file export
+            //target.torrents.addAll(torrents);
+            //Need to impliment
         }
     }
 
@@ -236,6 +284,9 @@ public class Main {
         Log.info("saved config at \"" + file.getAbsolutePath() + "\"");
     }
 
+    /**
+     * Print usage.
+     */
     public static void printUsage() {
         System.out.println(SUMMARY + "\n");
         if (config.info) {
@@ -278,157 +329,4 @@ public class Main {
     }
 
 
-    public enum OS {
-        Windows, Mac, Unix, Solaris;
-        private static String property = System.getProperty("os.name").toLowerCase();
-
-        public static OS getOS() {
-            if (isMac()) {
-                return Mac;
-            }
-            if (isUnix()) {
-                return Unix;
-            }
-            if (isWindows()) {
-                return Windows;
-            }
-            if (isSolaris()) {
-                return Solaris;
-            }
-            return null;
-        }
-
-        public static boolean isSupported(OS os) {
-            switch (os) {
-                case Windows:
-                    return false;
-                case Mac:
-                    return true;
-                case Unix:
-                    return true;
-                case Solaris:
-                    return false;
-                default:
-                    return false;
-            }
-        }
-
-        public static boolean isWindows() {
-            return (property.indexOf("win") >= 0);
-        }
-
-        public static boolean isMac() {
-            return (property.indexOf("mac") >= 0);
-        }
-
-        public static boolean isUnix() {
-            return (property.indexOf("nix") >= 0 || property.indexOf("nux") >= 0 || property.indexOf("aix") > 0);
-        }
-
-        public static boolean isSolaris() {
-            return (property.indexOf("sunos") >= 0);
-        }
-    }
-
-    static class ShutdownHook extends Thread {
-        private String threadName;
-
-        ShutdownHook(String name) {
-            threadName = name;
-            Log.trace("creating thread " + threadName);
-        }
-
-        public void start() {
-            Log.trace("starting " + threadName);
-            try {
-                FileUtils.forceDeleteOnExit(new File(getConfig().downloadDirectory));
-            } catch (IOException e) {
-                Log.error("error setting the downloads directory to delete on exit: " + e.getMessage(), e);
-            }
-            for (Client client : Blast3r.clients) {
-                client.stop();
-            }
-            if (Main.getConfig().isSaveConfig()) {
-                Main.saveConfig();
-            }
-            AnsiConsole.systemUninstall();
-        }
-
-    }
-
-    public static class MyLog extends Log.Logger {
-        public void log(int level, String category, String message, Throwable ex) {
-            StringBuilder builder = new StringBuilder();
-            Ansi ansi = new Ansi();
-            builder.append("[" + new Date() + "]");
-            switch (level) {
-                case Log.LEVEL_ERROR:
-                    builder.append("@|red  ERROR|@:");
-                    break;
-                case Log.LEVEL_WARN:
-                    builder.append("@|green  WARN|@:");
-                    break;
-                case Log.LEVEL_INFO:
-                    builder.append("@|blue  INFO|@:");
-                    break;
-                case Log.LEVEL_DEBUG:
-                    builder.append("@|yellow  DEBUG|@:");
-                    break;
-                case Log.LEVEL_TRACE:
-                    builder.append(" TRACE:");
-                    break;
-            }
-            builder.append(" [" + Thread.currentThread().getName() + "]");
-            builder.append(" [");
-            if (category != null) {
-                builder.append(category);
-            } else {
-                builder.append("*");
-            }
-            builder.append("]");
-            builder.append(" " + message);
-            if (ex != null) {
-                StringWriter writer = new StringWriter();
-                ex.printStackTrace(new PrintWriter(writer));
-                builder.append('\n');
-                builder.append(writer.toString().trim());
-            }
-            System.out.println(ansi.render(builder.toString()));
-            //System.out.println(builder);
-            if (Main.getConfig().isFileLog()) {
-                File file = new File(Main.getConfig().getLogFile());
-                if (!file.exists()) {
-                    try {
-                        file.createNewFile();
-                    } catch (IOException e) {
-                        Log.error("error creating new config file: " + e.getMessage() + "\n" + e.getStackTrace());
-                    }
-                }
-                try {
-                    FileUtils.writeStringToFile(file, builder.toString() + "\n", true);
-                } catch (IOException e) {
-                    Log.error("error writing new config to config file: " + e.getMessage() + "\n" + e.getStackTrace());
-                }
-            }
-        }
-
-        public enum LogLevel {
-            NONE(6),
-            ERROR(5),
-            WARN(4),
-            INFO(3),
-            DEBUG(2),
-            TRACE(1);
-
-            private int level;
-
-            LogLevel(int level) {
-                this.level = level;
-            }
-
-            public int getLevel() {
-                return level;
-            }
-        }
-    }
 }

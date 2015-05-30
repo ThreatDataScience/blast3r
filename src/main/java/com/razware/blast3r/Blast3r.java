@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2015 Razware Software Design
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Andrew Breksa (abreksa4@gmail.com) 5/29/2015
+ */
+
 package com.razware.blast3r;
 
 import com.esotericsoftware.minlog.Log;
@@ -26,6 +33,7 @@ public class Blast3r {
     todo: make a plugin system for torrent file downloads, or find a library that supports it
     todo: stndardize log4j output with minlog
     todo: add torrentz.eu scraping to get site urls
+    todo: write a way to save the target's torrents to disk and load them like th peers?
      */
 
     public static List<Client> clients = new ArrayList<Client>();
@@ -44,15 +52,21 @@ public class Blast3r {
     }
 
     public File downloadTorrentFile(Torrent torrent) throws IOException {
+        //create the needed directories
         FileUtils.forceMkdir(new File(Main.getConfig().torrentDir));
+        //Declear the new torrent file
         File torrentFile = new File(Main.getConfig().torrentDir + torrent.getTorrent_hash() + ".torrent");
+        //If we want to delete the file on exit:
         if (Main.getConfig().deleteTorrentsOnExit) {
             FileUtils.forceDeleteOnExit(torrentFile);
         }
+        //If it already exists, return the one on disk instead (this is cool, todo: get the torrent loading down so we can get non-dht torrents)
         if (torrentFile.exists()) {
             return torrentFile;
         }
+
         try {
+            //Try to get it from strike
             downloadFromStrike(torrent, torrentFile);
             return torrentFile;
         } catch (InvalidBEncodingException e) {
@@ -62,9 +76,12 @@ public class Blast3r {
             Log.warn("strike api", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\", falling back to torrage");
             Log.debug(e.getMessage(), e);
         }
+
+        //Get rid of the bad file
         Log.debug("deleting bad torrent...");
         FileUtils.forceDelete(torrentFile);
         try {
+            //Try to download from torrage
             downloadFromTorrage(torrent, torrentFile);
             return torrentFile;
         } catch (InvalidBEncodingException e) {
@@ -78,14 +95,14 @@ public class Blast3r {
         }
     }
 
-    private void downloadFromStrike(Torrent torrent, File torrentFile) throws InvalidBEncodingException, IOException {
+    private void downloadFromStrike(Torrent torrent, File torrentFile) throws IOException {
         Log.info("strike api", "downloading the torrent file for \"" + torrent.getTorrent_hash() + "\"");
         URL website = new URL(String.format(Main.getConfig().strikeDownloadURL, torrent.getTorrent_hash()));
         download(website, torrentFile);
     }
 
 
-    private void download(URL url, File torrentFile) throws InvalidBEncodingException, IOException {
+    private void download(URL url, File torrentFile) throws IOException {
         FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
         Log.debug("Downloading with URL: " + url.toString());
         java.net.URLConnection c = url.openConnection();
@@ -99,7 +116,7 @@ public class Blast3r {
         sharedTorrent.close();
     }
 
-    private void downloadFromTorrage(Torrent torrent, File torrentFile) throws InvalidBEncodingException, IOException {
+    private void downloadFromTorrage(Torrent torrent, File torrentFile) throws IOException {
         Log.info("torrage", "downloading the torrent file for \"" + torrent.getTorrent_hash() + "\"");
         URL website = new URL(String.format(Main.getConfig().torrageURL, torrent.getTorrent_hash()));
         download(website, torrentFile);
@@ -108,32 +125,41 @@ public class Blast3r {
 
     public List<String> getPeers(Torrent torrent) throws IOException {
         try {
+            //create the required directories
             FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
             List<String> ips = new UniqueList<String>();
+            //Load the torrent file
             SharedTorrent sharedTorrent = SharedTorrent.fromFile(downloadTorrentFile(torrent), new File(Main.getConfig().downloadDirectory));
+            //Download the torrent
             Client client = new Client(InetAddress.getLocalHost(), sharedTorrent);
             clients.add(client);
             client.download();
             int x = 0;
+            //While we have to little ips, sleep for A x times
             while (ips.size() < Main.getConfig().ttorrentSleepPeerCount && x <= Main.getConfig().ttorrentSleepCount) {
                 x++;
                 Log.info("ttorrent", "sleeping " + Main.getConfig().ttorrentSleep / 1000 + " seconds to wait for peers, have (" + client.getPeers().size() + ") of the minimum (" + Main.getConfig().ttorrentSleepPeerCount + ")");
                 Thread.currentThread().sleep(Main.getConfig().ttorrentSleep);
                 for (Peer peer : client.getPeers()) {
+                    //If it's a unique peer, log message and add IP
                     if (!ips.contains(peer.getIp())) {
                         Log.debug("ttorrent", "found peer \"" + peer.getIp() + "\" for \"" + torrent.getTorrent_title() + "\" (" + (ips.size() + 1) + ")");
+                        ips.add(peer.getIp());
                     }
-                    ips.add(peer.getIp());
                 }
 
             }
             Log.info("ttorrent", "(" + ips.size() + ") peers found");
+            //Stop the download
             client.getTorrent().stop();
             client.stop();
+            //Delete the downloaded data
             FileUtils.forceDelete(new File(Main.getConfig().downloadDirectory));
+            //If we got too little ips
             if (ips.size() < Main.getConfig().ttorrentSleepPeerCount) {
                 Log.warn("not enough peers found via ttorrent, falling back to nmap to discover peers");
                 try {
+                    //Try to get peers with nmap
                     ips.addAll(getPeersWithNMap(torrent));
                 } catch (IOException e) {
                     Log.error(e.getMessage(), e);

@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2015 Razware Software Design
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Andrew Breksa (abreksa4@gmail.com) 5/29/2015
+ */
+
 package com.razware.blast3r.system;
 
 import com.google.gson.annotations.Expose;
@@ -73,7 +80,7 @@ public class Config {
     private boolean saveConfig = false;
     @Expose
     @Option(name = "--log-level", aliases = {"-ll"}, usage = "The log level")
-    private Main.MyLog.LogLevel logLevel = Main.MyLog.LogLevel.INFO;
+    private MyLog.LogLevel logLevel = MyLog.LogLevel.INFO;
     @Expose
     @Option(name = "--log-to-file", aliases = {"-l2f"}, usage = "If " + Main.NAME + " should log to a file")
     private boolean fileLog = false;
@@ -97,7 +104,7 @@ public class Config {
     }
 
 
-    public Main.MyLog.LogLevel getLogLevel() {
+    public MyLog.LogLevel getLogLevel() {
         return logLevel;
     }
 

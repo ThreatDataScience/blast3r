@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) 2015 Razware Software Design
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ * Written by Andrew Breksa (abreksa4@gmail.com) 5/29/2015
+ */
+
 package com.razware.blast3r.system;
 
 import java.util.ArrayList;
