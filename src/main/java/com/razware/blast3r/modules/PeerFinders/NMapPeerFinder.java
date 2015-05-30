@@ -30,16 +30,28 @@ public class NMapPeerFinder implements IPeerFinder {
             return peers;
         }
         Log.debug("nmap", "looking up peers for \"" + torrent.getTorrent_hash() + "\"");
-        Process process = new ProcessBuilder(
-                "/bin/sh", "-c", String.format(Main.blast3r.config.nmapCMD, torrent.getMagnet_uri())).start();
+        Process process;
+        switch (Main.os) {
+            case Windows:
+                process = new ProcessBuilder(Main.getConfig().nmapPath.concat("nmap.exe"), "-c", String.format(Main.getConfig().nmapCMD, torrent.getMagnet_uri())).start();
+                break;
+            default:
+                process = new ProcessBuilder(
+                        "/bin/sh", "-c", String.format(Main.blast3r.config.nmapCMD, torrent.getMagnet_uri())).start();
+                break;
+        }
         Log.debug(String.format("command line: " + Main.blast3r.config.nmapCMD, torrent.getMagnet_uri()));
         InputStream is = process.getInputStream();
         InputStreamReader isr = new InputStreamReader(is);
         BufferedReader br = new BufferedReader(isr);
+        BufferedReader bre = new BufferedReader(new InputStreamReader(process.getErrorStream()));
         String line;
         while ((line = br.readLine()) != null) {
             Log.debug("nmap", "found peer \"" + line + "\" for \"" + torrent.getTorrent_title() + "\"");
             peers.add(line);
+        }
+        while ((line = bre.readLine()) != null) {
+            Log.error(line);
         }
         Log.info("nmap", "(" + peers.size() + ") peers found");
         return peers;

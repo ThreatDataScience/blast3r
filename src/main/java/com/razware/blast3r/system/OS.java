@@ -33,7 +33,7 @@ public enum OS {
     public static boolean isSupported(OS os) {
         switch (os) {
             case Windows:
-                return false;
+                return true;
             case Mac:
                 return true;
             case Unix:
