@@ -65,10 +65,10 @@ public class Config {
     @Option(name = "--ttorrent-sleep", aliases = {"-ts"}, usage = "The time in seconds to sleep to wait for peers")
     public int ttorrentSleep = 30000;
     @Expose
-    @Option(name = "--ttorrent-sleep-count", aliases = {"-tsc"}, usage = "The number of times to let ttorrent sleep to find peers before moving on")
+    @Option(name = "--ttorrent-sleep-count", aliases = {"-tsc"}, usage = "The number of times to let ttorrent sleep to find peers before moving on to the next method of peer discovery")
     public int ttorrentSleepCount = 3;
     @Expose
-    @Option(name = "--ttorrent-sleep-peer-count", aliases = "-tspc", usage = "The minimum nuber of peers for ttorrent to have before not sleeping.")
+    @Option(name = "--ttorrent-sleep-peer-count", aliases = "-tspc", usage = "The minimum number of peers for ttorrent to have before continuing without using namp.")
     public int ttorrentSleepPeerCount = 1;
     @Expose
     @Option(name = "--data-directory", aliases = {"-datad"}, usage = "The directory that holds the data files")

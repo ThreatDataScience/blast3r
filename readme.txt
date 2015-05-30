@@ -92,10 +92,11 @@ Options:
                                           for peers (default: 30000)
  --ttorrent-sleep-count (-tsc) N        : The number of times to let ttorrent
                                           sleep to find peers before moving on
+                                          to the next method of peer discovery
                                           (default: 3)
- --ttorrent-sleep-peer-count (-tspc) N  : The minimum nuber of peers for
-                                          ttorrent to have before not sleeping.
-                                          (default: 1)
+ --ttorrent-sleep-peer-count (-tspc) N  : The minimum number of peers for
+                                          ttorrent to have before continuing
+                                          without using namp. (default: 1)
  --user-agent VAL                       : The user agent to use while accessing
                                           strike and torrage (default:
                                           Mozilla/5.0 (Macintosh; U; Intel Mac
