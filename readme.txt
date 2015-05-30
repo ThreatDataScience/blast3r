@@ -86,6 +86,8 @@ Options:
                                           files (default: targets/)
  --torrage-url VAL                      : The torrage url (default:
                                           http://torrage.info/download.php?h=%s)
+ --torrent-directory VAL                : The directory to save the downloaded
+                                          torrent files to (default: torrents/)
  --ttorrent-sleep (-ts) N               : The time in seconds to sleep to wait
                                           for peers (default: 30000)
  --ttorrent-sleep-count (-tsc) N        : The number of times to let ttorrent
@@ -99,5 +101,3 @@ Options:
                                           Mozilla/5.0 (Macintosh; U; Intel Mac
                                           OS X 10.4; en-US; rv:1.9.2.2)
                                           Gecko/20100316 Firefox/3.6.2)
- -torrent-directory VAL                 : The directory to save the downloaded
-                                          torrent files to (default: torrents/)

@@ -41,7 +41,7 @@ public class Config {
     @Option(name = "--delete-torrents-on-exit", aliases = {"-dtoe"}, usage = "If blast3r should delete the downloaded torrent files on exit")
     public boolean deleteTorrentsOnExit = false;
     @Expose
-    @Option(name = "-torrent-directory", usage = "The directory to save the downloaded torrent files to")
+    @Option(name = "--torrent-directory", usage = "The directory to save the downloaded torrent files to")
     public String torrentDir = "torrents/";
     @Expose
     @Option(name = "--strike-api-url", usage = "The strike api base url")
