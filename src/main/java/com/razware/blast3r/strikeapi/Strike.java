@@ -3,6 +3,7 @@ package com.razware.blast3r.strikeapi;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
+import com.razware.blast3r.Main;
 import com.sun.xml.internal.messaging.saaj.util.Base64;
 
 import java.io.BufferedReader;
@@ -13,9 +14,6 @@ import java.net.URLEncoder;
 import java.util.List;
 
 public class Strike {
-
-    private final String userAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2";
-    private final String apiUrl = "https://getstrike.net/api/v2/";
     private Gson gson;
 
     {
@@ -42,9 +40,9 @@ public class Strike {
     }
 
     private String query(String string) throws Exception {
-        URL url = new URL(apiUrl + string);
+        URL url = new URL(Main.getConfig().apiUrl + string);
         URLConnection connection = url.openConnection();
-        connection.setRequestProperty("User-Agent", userAgent);
+        connection.setRequestProperty("User-Agent", Main.getConfig().userAgent);
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         StringBuilder response = new StringBuilder();
         String inputLine;

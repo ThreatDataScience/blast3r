@@ -11,6 +11,21 @@ import java.util.List;
 public class Config {
 
     @Expose
+    @Option(name = "--strike-api-url", usage = "The strike api base url")
+    public String apiUrl = "https://getstrike.net/api/v2/";
+    @Expose
+    @Option(name = "--strike-download-url", usage = "The strike download url")
+    public String strikeDownloadURL = "https://getstrike.net/torrents/api/download/%s.torrent";
+    @Expose
+    @Option(name = "--torrage-url", usage = "The torrage url")
+    public String torrageURL = "http://torrage.info/download.php?h=%s";
+    @Expose
+    @Option(name = "--user-agent", usage = "The user agent to use while accessing strike and torrage")
+    public String userAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2";
+    @Expose
+    @Option(name = "--nmap-coomand-line", usage = "The nmap command line to use to discover peers")
+    public String nmapCMD = "nmap --script bittorrent-discovery --script-args 'bittorrent-discovery.magnet=\"%s\"' | grep -E -o \"([0-9]{1,3}[\\.]){3}[0-9]{1,3}\"";
+    @Expose
     @Option(name = "--download-directory", aliases = {"-downd"}, usage = "The directory that holds the downloaded files")
     public String downloadDirectory = "downloads/";
     @Expose

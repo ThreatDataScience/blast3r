@@ -25,12 +25,11 @@ public class Blast3r {
     todo: make a plugin system for peer discovery
     todo: make a plugin system for torrent indexs, this includes things like private trackers...
     todo: make a plugin system for torrent file downloads, or find a library that supports it
+    todo: stndardize log4j output with minlog
+    todo: add check to look for exisiting torrent (save to torrents/ dir) need config for --delete-torrents
+    todo: add torrentz.eu scraping to get site urls
      */
 
-    public static final String strikeDownloadURL = "https://getstrike.net/torrents/api/download/%s.torrent";
-    public static final String torrageURL = "http://torrage.info/download.php?h=%s";
-    private static final String userAgent = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2";
-    private static final String nmapCMD = "nmap --script bittorrent-discovery --script-args 'bittorrent-discovery.magnet=\"%s\"' | grep -E -o \"([0-9]{1,3}[\\.]){3}[0-9]{1,3}\"";
     public static List<Client> clients = new ArrayList<Client>();
     public Strike strike = new Strike();
 
@@ -78,7 +77,7 @@ public class Blast3r {
 
     private void downloadFromStrike(Torrent torrent, File torrentFile) throws InvalidBEncodingException, IOException {
         Log.info("strike api", "downloading the torrent file for " + torrent.getTorrent_hash());
-        URL website = new URL(String.format(strikeDownloadURL, torrent.getTorrent_hash()));
+        URL website = new URL(String.format(Main.getConfig().strikeDownloadURL, torrent.getTorrent_hash()));
         download(website, torrentFile);
     }
 
@@ -87,7 +86,7 @@ public class Blast3r {
         FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
         Log.debug("Downloading with URL: " + url.toString());
         java.net.URLConnection c = url.openConnection();
-        c.setRequestProperty("User-Agent", userAgent);
+        c.setRequestProperty("User-Agent", Main.getConfig().userAgent);
         ReadableByteChannel rbc = Channels.newChannel(c.getInputStream());
         FileOutputStream fos = new FileOutputStream(torrentFile.getAbsoluteFile());
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
@@ -99,7 +98,7 @@ public class Blast3r {
 
     private void downloadFromTorrage(Torrent torrent, File torrentFile) throws InvalidBEncodingException, IOException {
         Log.info("torrage", "downloading the torrent file for " + torrent.getTorrent_hash());
-        URL website = new URL(String.format(torrageURL, torrent.getTorrent_hash()));
+        URL website = new URL(String.format(Main.getConfig().torrageURL, torrent.getTorrent_hash()));
         download(website, torrentFile);
     }
 
@@ -161,8 +160,8 @@ public class Blast3r {
         }
         Log.info("looking up peers for " + torrent.getTorrent_hash());
         Process process = new ProcessBuilder(
-                "/bin/sh", "-c", String.format(nmapCMD, torrent.getMagnet_uri())).start();
-        Log.debug(String.format("command line: " + nmapCMD, torrent.getMagnet_uri()));
+                "/bin/sh", "-c", String.format(Main.getConfig().nmapCMD, torrent.getMagnet_uri())).start();
+        Log.debug(String.format("command line: " + Main.getConfig().nmapCMD, torrent.getMagnet_uri()));
         InputStream is = process.getInputStream();
         InputStreamReader isr = new InputStreamReader(is);
         BufferedReader br = new BufferedReader(isr);
