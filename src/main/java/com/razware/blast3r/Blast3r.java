@@ -128,7 +128,7 @@ public class Blast3r {
             client.stop();
             FileUtils.forceDelete(new File(Main.getConfig().downloadDirectory));
             if (ips.size() < Main.getConfig().ttorrentSleepPeerCount) {
-                Log.warn("not enough peers found via ttorrent, falling back to nmap");
+                Log.warn("not enough peers found via ttorrent, falling back to nmap to discover peers");
                 try {
                     ips.addAll(getPeersWithNMap(torrent));
                 } catch (IOException e) {
@@ -137,7 +137,7 @@ public class Blast3r {
             }
             return ips;
         } catch (IOException e) {
-            Log.error("ttorrent", "error downloading torrent file, falling back to nmap");
+            Log.warn("ttorrent", "unable to download the torrent file, falling back to nmap to discover peers");
             Log.debug(e.getMessage(), e);
             try {
                 return getPeersWithNMap(torrent);
@@ -154,6 +154,11 @@ public class Blast3r {
     }
 
     public List<String> getPeersWithNMap(Torrent torrent) throws IOException {
+        List<String> peers = new ArrayList<String>();
+        if (Main.getConfig().disableNmap) {
+            Log.info("nmap", "needed to use nmap, but it was disabled...");
+            return peers;
+        }
         Log.info("looking up peers for " + torrent.getTorrent_hash());
         Process process = new ProcessBuilder(
                 "/bin/sh", "-c", String.format(nmapCMD, torrent.getMagnet_uri())).start();
@@ -162,7 +167,6 @@ public class Blast3r {
         InputStreamReader isr = new InputStreamReader(is);
         BufferedReader br = new BufferedReader(isr);
         String line;
-        List<String> peers = new ArrayList<String>();
         while ((line = br.readLine()) != null) {
             Log.debug("nmap", "found peer \"" + line + "\" for \"" + torrent.getTorrent_title() + "\"");
             peers.add(line);

@@ -32,13 +32,23 @@ public class Main {
             " | \\_\\ \\  |__/ __ \\_\\___ \\  |  | /       \\  | \\/\n" +
             " |___  /____(____  /____  > |__|/______  /__|   \n" +
             "     \\/          \\/     \\/             \\/       ";
+    public static final String notes =
+            "This version supports searching strike for torrent information, and uses strike \n" +
+                    "and torrage to download the required torrent files in order to discover peers  \n" +
+                    "with ttorrent. If that fails (either no torrent file can be downloaded or is \n" +
+                    "invalid), nmap is used.";
+    public static final String summary =
+            "blast3r is a tool for finding torrents via json defined \"targets\" that contain \n" +
+                    "a query (or info hash), and optional category and subcategory strings. The gathered\n" +
+                    "information is saved in json files in the --data-directiry. \n" +
+                    "When blast3r looks up peers for a torrent, if a json file exists for it\n" +
+                    "already, those peers are loaded, and added if unique to the new list.";
     public static OS os = OS.getOS();
     public static Blast3r blast3r;
     private static Config config = new Config();
     private static CmdLineParser cmdLineParser;
     private static String configPath = "config.json";
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
 
     public static void clearScreen() {
         Ansi ansi = new Ansi();
@@ -87,7 +97,7 @@ public class Main {
                     targets.add(target);
                     Log.debug("loaded target \"" + config.targetDirectory + filename + ".json" + "\":\n" + getGson().toJson(target));
                 } catch (IOException e) {
-                    Log.error("target file " + filename + " does not exist...");
+                    Log.error("target file " + filename + " does not exist: " + e.getMessage(), e);
                 }
             }
         }
@@ -113,8 +123,10 @@ public class Main {
                 File file = new File(config.dataDirectory + target.name + "/" + torrent.getTorrent_hash() + ".json");
                 if (file.exists()) {
                     Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
-                    for (String p : torrent1.getPeers()) {
-                        torrent.getPeers().add(p);
+                    if (torrent1.getPeers().size() > 0) {
+                        for (String p : torrent1.getPeers()) {
+                            torrent.getPeers().add(p);
+                        }
                     }
                     file.delete();
                 }
@@ -132,7 +144,7 @@ public class Main {
                 Log.debug("loading config file (\"" + getConfigPath() + "\")");
                 config = getGson().fromJson(FileUtils.readFileToString(file), Config.class);
             } catch (IOException e) {
-                Log.error("failed to load config (now using defaults)", e);
+                Log.error("failed to load config (now using defaults): " + e.getMessage(), e);
                 config = new Config();
             }
         } else {
@@ -180,12 +192,18 @@ public class Main {
         try {
             FileUtils.writeStringToFile(new File(configPath), getGson().toJson(config));
         } catch (IOException e) {
-            Log.error("unable to save config at \"" + file.getAbsolutePath() + "\"", e);
+            Log.error("unable to save config at \"" + file.getAbsolutePath() + "\": " + e.getMessage(), e);
         }
         Log.info("saved config at \"" + file.getAbsolutePath() + "\"");
     }
 
     public static void printUsage() {
+        if (config.info) {
+            System.out.println(summary + "\n");
+            if (config.getLogLevel().equals(MyLog.LogLevel.DEBUG)) {
+                System.out.println(notes + "\n");
+            }
+        }
         System.out.println("Options: \n");
         (new CmdLineParser(new Config())).printUsage(System.out);
     }
@@ -214,6 +232,11 @@ public class Main {
     public static void printBanner() {
         String banner = Main.ART + "\nversion " + Main.VERSION + "\n\t(C) 2015 Andrew Breksa [abreksa4@gmail.com]\n";
         System.out.println(banner);
+        System.out.println("blast3r uses various open source technologies and data sources, including:\n" +
+                "\tttorrent   (http://mpetazzoni.github.io/ttorrent/),\n" +
+                "\tStrike API (https://getstrike.net/api/)\n" +
+                "and requires nmap for some optional functionality (https://nmap.org/).\n" +
+                "See the \"--disable-nmap\" option.\n");
     }
 
 
@@ -282,7 +305,7 @@ public class Main {
             try {
                 FileUtils.forceDeleteOnExit(new File(getConfig().downloadDirectory));
             } catch (IOException e) {
-                Log.error(e.getMessage(), e);
+                Log.error("error setting the downloads directory to delete on exit: "+e.getMessage(), e);
             }
             for (Client client : Blast3r.clients) {
                 client.stop();
@@ -340,13 +363,13 @@ public class Main {
                     try {
                         file.createNewFile();
                     } catch (IOException e) {
-                        Log.error(e.getMessage() + "\n" + e.getStackTrace());
+                        Log.error("error creating new config file: " + e.getMessage() + "\n" + e.getStackTrace());
                     }
                 }
                 try {
                     FileUtils.writeStringToFile(file, builder.toString() + "\n", true);
                 } catch (IOException e) {
-                    Log.error(e.getMessage() + "\n" + e.getStackTrace());
+                    Log.error("error writing new config to config file: " + e.getMessage() + "\n" + e.getStackTrace());
                 }
             }
         }

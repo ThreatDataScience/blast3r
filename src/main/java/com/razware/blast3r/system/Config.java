@@ -29,12 +29,17 @@ public class Config {
     @Option(name = "--target-directory", aliases = {"-td"}, usage = "The directory which holds the target files")
     public String targetDirectory = "targets/";
     @Expose
-    @Argument(usage = "The names of the target files to load")
+    @Argument(usage = "The names of the target files to load", required = true)
     public List<String> targets = new ArrayList<String>();
     public boolean loadTargetsFromFiles = false;
     @Expose
     @Option(name = "--peers", aliases = {"--get-peers"}, usage = "Get the current peers of each torrent")
     public boolean getPeers = false;
+    @Option(name = "--info", usage = "diaplay extra information in the help output")
+    public boolean info = false;
+    @Expose
+    @Option(name = "--disable-nmap", usage = "disables using nmap to scan for peers")
+    public boolean disableNmap = false;
     @Option(name = "--help", aliases = {"-h", "--?", "-?"}, usage = "Display this help text and exit", help = true)
     private boolean help = false;
     @Option(name = "--save-config", usage = "Saves the provided config to disk")
