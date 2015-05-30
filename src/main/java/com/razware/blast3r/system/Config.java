@@ -17,6 +17,9 @@ import java.util.List;
 public class Config {
 
     @Expose
+    @Option(name = "--disable-ttorrent", usage = "Disable temporarily downloading the torrent content to discovery peers")
+    public boolean disableTTorrent = false;
+    @Expose
     @Option(name = "--disable-user-agent", usage = "Disables the user agent header from being set")
     public boolean disableUserAgentSpoo = false;
     @Expose

@@ -51,6 +51,9 @@ Options:
                                           (default: false)
  --disable-nmap                         : disables using nmap to scan for peers
                                           (default: false)
+ --disable-ttorrent                     : Disable temporarily downloading the
+                                          torrent content to discovery peers
+                                          (default: false)
  --disable-user-agent                   : Disables the user agent header from
                                           being set (default: false)
  --download-directory (-downd) VAL      : The directory that holds the

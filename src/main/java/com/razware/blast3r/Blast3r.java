@@ -33,6 +33,7 @@ public class Blast3r {
     todo: stndardize log4j output with minlog
     todo: add torrentz.eu scraping to get site urls
     todo: write a way to save the target's torrents to disk and load them like th peers?
+    todo: fix the unhandled
      */
 
     public static List<Client> clients = new ArrayList<Client>();
@@ -74,10 +75,10 @@ public class Blast3r {
             downloadFromStrike(torrent, torrentFile);
             return torrentFile;
         } catch (InvalidBEncodingException e) {
-            Log.warn("strike api", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\", falling back to torrage");
+            Log.debug("strike api", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\", falling back to torrage");
             Log.debug(e.getMessage(), e);
         } catch (IOException e) {
-            Log.warn("strike api", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\", falling back to torrage");
+            Log.debug("strike api", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\", falling back to torrage");
             Log.debug(e.getMessage(), e);
         }
 
@@ -89,25 +90,25 @@ public class Blast3r {
             downloadFromTorrage(torrent, torrentFile);
             return torrentFile;
         } catch (InvalidBEncodingException e) {
-            Log.warn("torrage", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\"");
+            Log.debug("torrage", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\"");
             Log.debug(e.getMessage(), e);
             throw new IOException("unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\"", e);
         } catch (IOException e) {
-            Log.warn("torrage", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\"");
+            Log.debug("torrage", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\"");
             Log.debug(e.getMessage(), e);
             throw new IOException("unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\"", e);
         }
     }
 
     private void downloadFromStrike(Torrent torrent, File torrentFile) throws IOException {
-        Log.info("strike api", "downloading the torrent file for \"" + torrent.getTorrent_hash() + "\"");
+        Log.debug("strike api", "downloading the torrent file for \"" + torrent.getTorrent_hash() + "\"");
         URL website = new URL(String.format(Main.getConfig().strikeDownloadURL, torrent.getTorrent_hash()));
         download(website, torrentFile);
     }
 
     private void download(URL url, File torrentFile) throws IOException {
         FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
-        Log.debug("Downloading with URL: " + url.toString());
+        Log.debug("downloading with URL: " + url.toString());
         URLConnection connection;
         if (Main.getConfig().proxy) {
             Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(Main.getConfig().proxyIp, Main.getConfig().proxyPort));
@@ -128,24 +129,29 @@ public class Blast3r {
     }
 
     private void downloadFromTorrage(Torrent torrent, File torrentFile) throws IOException {
-        Log.info("torrage", "downloading the torrent file for \"" + torrent.getTorrent_hash() + "\"");
+        Log.debug("torrage", "downloading the torrent file for \"" + torrent.getTorrent_hash() + "\"");
         URL website = new URL(String.format(Main.getConfig().torrageURL, torrent.getTorrent_hash()));
         download(website, torrentFile);
     }
 
     public List<String> getPeers(Torrent torrent) throws IOException {
+        List<String> ips = new UniqueList<String>();
+        if (Main.getConfig().disableTTorrent) {
+            Log.warn("ttorrent is disabled, falling back to nmap");
+            ips.addAll(getPeersWithNMap(torrent));
+            return ips;
+        }
         Log.info("ttorrent", "getting peers for \"" + torrent.getTorrent_hash() + "\"");
         try {
             FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
             //Delete the downloaded data
             FileUtils.forceDelete(new File(Main.getConfig().downloadDirectory));
             while (new File(Main.getConfig().downloadDirectory).exists()) {
-                Log.info("ttorrent", "sleeping for " + 5 + " seconds for downloaded torrent content to be deleted...");
+                Log.debug("ttorrent", "sleeping for " + 5 + " seconds for downloaded torrent content to be deleted...");
                 Thread.sleep(5000);
             }
             //create the required directories
             FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
-            List<String> ips = new UniqueList<String>();
             //Load the torrent file
             SharedTorrent sharedTorrent = SharedTorrent.fromFile(downloadTorrentFile(torrent), new File(Main.getConfig().downloadDirectory));
             //Download the torrent
@@ -156,7 +162,7 @@ public class Blast3r {
             //While we have to little ips, sleep for A x times
             while (ips.size() < Main.getConfig().ttorrentSleepPeerCount && x <= Main.getConfig().ttorrentSleepCount) {
                 x++;
-                Log.info("ttorrent", "sleeping " + Main.getConfig().ttorrentSleep / 1000 + " seconds to wait for peers, have (" + client.getPeers().size() + ") of the minimum (" + Main.getConfig().ttorrentSleepPeerCount + ")");
+                Log.debug("ttorrent", "sleeping " + Main.getConfig().ttorrentSleep / 1000 + " seconds to wait for peers, have (" + client.getPeers().size() + ") of the minimum (" + Main.getConfig().ttorrentSleepPeerCount + ")");
                 Thread.sleep(Main.getConfig().ttorrentSleep);
                 for (Peer peer : client.getPeers()) {
                     //If it's a unique peer, log message and add IP
@@ -170,7 +176,7 @@ public class Blast3r {
             //Stop the download
             client.stop();
             while (!client.getState().equals(Client.ClientState.ERROR)) {
-                Log.info("ttorrent", "sleeping for 5 seconds to let ttorrent client stop...");
+                Log.debug("ttorrent", "sleeping for 5 seconds to let ttorrent client stop...");
                 Thread.sleep(5000);
             }
             //If we got too little ips
@@ -207,7 +213,7 @@ public class Blast3r {
             Log.warn("nmap", "needed to use nmap, but it was disabled...");
             return peers;
         }
-        Log.info("nmap", "looking up peers for \"" + torrent.getTorrent_hash() + "\"");
+        Log.debug("nmap", "looking up peers for \"" + torrent.getTorrent_hash() + "\"");
         Process process = new ProcessBuilder(
                 "/bin/sh", "-c", String.format(Main.getConfig().nmapCMD, torrent.getMagnet_uri())).start();
         Log.debug(String.format("command line: " + Main.getConfig().nmapCMD, torrent.getMagnet_uri()));
