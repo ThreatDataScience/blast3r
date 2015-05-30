@@ -1,4 +1,3 @@
-___.   .__                   __ ________        
 \_ |__ |  | _____    _______/  |\_____  \______ 
  | __ \|  | \__  \  /  ___/\   __\_(__  <_  __ \
  | \_\ \  |__/ __ \_\___ \  |  | /       \  | \/
@@ -36,7 +35,6 @@ Usage:
 
 Options: 
 
- VAL                                    : The names of the target files to load
  --data-directory (-datad) VAL          : The directory that holds the data
                                           files (default: data/)
  --delete-torrents-on-exit (-dtoe)      : If blast3r should delete the
@@ -44,11 +42,13 @@ Options:
                                           (default: false)
  --disable-nmap                         : disables using nmap to scan for peers
                                           (default: false)
+ --disable-user-agent                   : Disables the user agent header from
+                                          being set (default: false)
  --download-directory (-downd) VAL      : The directory that holds the
                                           downloaded files (default: downloads/)
- --hash VAL                             : Run a search with the specified info
+ --hash (-h) VAL                        : Run a search with the specified info
                                           hashes as targets.
- --help (-h, --?, -?)                   : Display this help text and exit
+ --help (--?, -?)                       : Display this help text and exit
                                           (default: false)
  --info                                 : diaplay extra information in the help
                                           output (default: false)
@@ -57,6 +57,8 @@ Options:
  WARN | INFO | DEBUG | TRACE]              
  --log-to-file (-l2f)                   : If blast3r should log to a file
                                           (default: false)
+ --loop                                 : If blast3r should loop (update peer
+                                          lists) until ctrl+C (default: false)
  --nmap-command-line VAL                : The nmap command line to use to
                                           discover peers (default: nmap
                                           --script bittorrent-discovery
@@ -65,7 +67,11 @@ Options:
                                           "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
  --peers (--get-peers)                  : Get the current peers of each torrent
                                           (default: false)
- --query VAL                            : Run a search with the specified query
+ --proxy                                : If a SOCKS proxy should be used
+                                          (default: false)
+ --proxy-ip VAL                         : The SOCKS proxy IP addres (default: )
+ --proxy-port N                         : The SOCKS proxy port (default: 0)
+ --query (-q) VAL                       : Run a search with the specified query
                                           strings as targets.
  --save-config                          : Saves the provided config to disk
                                           (default: false)
@@ -74,6 +80,7 @@ Options:
  --strike-download-url VAL              : The strike download url (default:
                                           https://getstrike.net/torrents/api/dow
                                           nload/%s.torrent)
+ --target (-t) VAL                      : The names of the target files to load
  --target-directory (-td) VAL           : The directory which holds the target
                                           files (default: targets/)
  --torrage-url VAL                      : The torrage url (default:
