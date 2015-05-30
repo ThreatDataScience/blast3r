@@ -5,7 +5,7 @@
  * Written by Andrew Breksa (abreksa4@gmail.com) 5/30/2015
  */
 
-package com.razware.blast3r.modules;
+package com.razware.blast3r.modules.TorrentDownloaders;
 
 import com.esotericsoftware.minlog.Log;
 import com.razware.blast3r.Main;

@@ -9,20 +9,20 @@ package com.razware.blast3r;
 
 import com.esotericsoftware.minlog.Log;
 import com.razware.blast3r.models.Target;
-import com.razware.blast3r.modules.StrikeTorrentDownloader;
-import com.razware.blast3r.modules.TorrageTorrentDownloader;
+import com.razware.blast3r.modules.PeerFinders.NMapPeerFinder;
+import com.razware.blast3r.modules.PeerFinders.TTorrentPeerFinder;
+import com.razware.blast3r.modules.TorrentDownloaders.StrikeTorrentDownloader;
+import com.razware.blast3r.modules.TorrentDownloaders.TorrageTorrentDownloader;
 import com.razware.blast3r.strikeapi.Strike;
 import com.razware.blast3r.strikeapi.Torrent;
 import com.razware.blast3r.system.Config;
 import com.razware.blast3r.system.UniqueList;
 import com.turn.ttorrent.bcodec.InvalidBEncodingException;
 import com.turn.ttorrent.client.Client;
-import com.turn.ttorrent.client.SharedTorrent;
-import com.turn.ttorrent.common.Peer;
 import org.apache.commons.io.FileUtils;
 
-import java.io.*;
-import java.net.InetAddress;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +35,7 @@ public class Blast3r {
     todo: add torrentz.eu scraping to get site urls
     todo: write a way to save the target's torrents to disk and load them like th peers?
     todo: fix the unhandled
+    todo: find a way to remove out ip from the peer lists
      */
 
     public static List<Client> clients = new ArrayList<Client>();
@@ -208,51 +209,20 @@ public class Blast3r {
         }
     }
 
-    public List<String> getPeers(Torrent torrent) throws IOException {
+    public List<String> getPeersWithNMap(Torrent torrent) throws IOException, InterruptedException {
+        return new NMapPeerFinder().getPeers(torrent);
+    }
+
+    public List<String> getPeers(Torrent torrent) throws IOException, InterruptedException {
         List<String> ips = new UniqueList<String>();
         if (this.config.disableTTorrent) {
             Log.warn("ttorrent is disabled, falling back to nmap");
             ips.addAll(getPeersWithNMap(torrent));
             return ips;
         }
-        Log.info("ttorrent", "getting peers for \"" + torrent.getTorrent_hash() + "\"");
+        TTorrentPeerFinder tTorrentPeerFinder = new TTorrentPeerFinder();
         try {
-            FileUtils.forceMkdir(new File(this.config.downloadDirectory));
-            //Delete the downloaded data
-            FileUtils.forceDelete(new File(this.config.downloadDirectory));
-            while (new File(this.config.downloadDirectory).exists()) {
-                Log.debug("ttorrent", "sleeping for " + 5 + " seconds for downloaded torrent content to be deleted...");
-                Thread.sleep(5000);
-            }
-            //create the required directories
-            FileUtils.forceMkdir(new File(this.config.downloadDirectory));
-            //Load the torrent file
-            SharedTorrent sharedTorrent = SharedTorrent.fromFile(downloadTorrentFile(torrent), new File(this.config.downloadDirectory));
-            //Download the torrent
-            Client client = new Client(InetAddress.getLocalHost(), sharedTorrent);
-            clients.add(client);
-            client.download();
-            int x = 0;
-            //While we have to little ips, sleep for A x times
-            while (ips.size() < this.config.ttorrentSleepPeerCount && x <= this.config.ttorrentSleepCount) {
-                x++;
-                Log.debug("ttorrent", "sleeping " + this.config.ttorrentSleep / 1000 + " seconds to wait for peers, have (" + client.getPeers().size() + ") of the minimum (" + this.config.ttorrentSleepPeerCount + ")");
-                Thread.sleep(this.config.ttorrentSleep);
-                for (Peer peer : client.getPeers()) {
-                    //If it's a unique peer, log message and add IP
-                    if (!ips.contains(peer.getIp())) {
-                        Log.debug("ttorrent", "found peer \"" + peer.getIp() + "\" for \"" + torrent.getTorrent_title() + "\" (" + (ips.size() + 1) + ")");
-                        ips.add(peer.getIp());
-                    }
-                }
-            }
-            Log.info("ttorrent", "(" + ips.size() + ") peers found");
-            //Stop the download
-            client.stop();
-            while (!client.getState().equals(Client.ClientState.ERROR)) {
-                Log.debug("ttorrent", "sleeping for 5 seconds to let ttorrent client stop...");
-                Thread.sleep(5000);
-            }
+            ips = tTorrentPeerFinder.getPeers(torrent);
             //If we got too little ips
             if (ips.size() < this.config.ttorrentSleepPeerCount) {
                 Log.warn("not enough peers found via ttorrent, falling back to nmap to discover peers");
@@ -281,25 +251,4 @@ public class Blast3r {
         }
     }
 
-    public List<String> getPeersWithNMap(Torrent torrent) throws IOException {
-        List<String> peers = new ArrayList<String>();
-        if (this.config.disableNmap) {
-            Log.warn("nmap", "needed to use nmap, but it was disabled...");
-            return peers;
-        }
-        Log.debug("nmap", "looking up peers for \"" + torrent.getTorrent_hash() + "\"");
-        Process process = new ProcessBuilder(
-                "/bin/sh", "-c", String.format(this.config.nmapCMD, torrent.getMagnet_uri())).start();
-        Log.debug(String.format("command line: " + this.config.nmapCMD, torrent.getMagnet_uri()));
-        InputStream is = process.getInputStream();
-        InputStreamReader isr = new InputStreamReader(is);
-        BufferedReader br = new BufferedReader(isr);
-        String line;
-        while ((line = br.readLine()) != null) {
-            Log.debug("nmap", "found peer \"" + line + "\" for \"" + torrent.getTorrent_title() + "\"");
-            peers.add(line);
-        }
-        Log.info("nmap", "(" + peers.size() + ") peers found");
-        return peers;
-    }
 }
