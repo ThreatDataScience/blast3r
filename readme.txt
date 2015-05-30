@@ -33,10 +33,11 @@ To look up all torrents on Strike with that query and fetch peer information fro
 
 Examples: 
 
-	 java -jar blast3r.jar -q "ubuntu 14.04" --peers --proxy --proxy-ip localhost --proxy-port 1080
+	 java -jar blast3r.jar -q "xubuntu 14.04" --peers --proxy --proxy-ip localhost --proxy-port 1080
 
-Would search for torrent with the query "ubuntu 14.04", and using the socks proxy provided,
-download the required torrent information, download the torrent file i possible, and them discover\nas many peers as possible (user defined minimum an timeout).(NOTE: nmap and ttorrent traffic isn't routed through the proxy, so don't use --peers)
+Would search for torrent with the query "xubuntu 14.04", and using the socks proxy provided,
+download the required torrent information, download the torrent file if possible, and them discover
+as many peers as possible via ttorrent and nmap (user defined minimum an timeout).(NOTE: nmap and ttorrent traffic isn't routed through the proxy, so don't use --peers)
 
 Usage:
 	 java -jar blast3r.jar [OPTIONS]
