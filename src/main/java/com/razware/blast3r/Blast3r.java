@@ -9,6 +9,8 @@ package com.razware.blast3r;
 
 import com.esotericsoftware.minlog.Log;
 import com.razware.blast3r.models.Target;
+import com.razware.blast3r.modules.StrikeTorrentDownloader;
+import com.razware.blast3r.modules.TorrageTorrentDownloader;
 import com.razware.blast3r.strikeapi.Strike;
 import com.razware.blast3r.strikeapi.Torrent;
 import com.razware.blast3r.system.UniqueList;
@@ -19,9 +21,7 @@ import com.turn.ttorrent.common.Peer;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.net.*;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,7 +72,8 @@ public class Blast3r {
 
         try {
             //Try to get it from strike
-            downloadFromStrike(torrent, torrentFile);
+            StrikeTorrentDownloader strikeTorrentDownloader = new StrikeTorrentDownloader();
+            strikeTorrentDownloader.download(torrent, torrentFile);
             return torrentFile;
         } catch (InvalidBEncodingException e) {
             Log.debug("strike api", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\", falling back to torrage");
@@ -87,7 +88,8 @@ public class Blast3r {
         FileUtils.forceDelete(torrentFile);
         try {
             //Try to download from torrage
-            downloadFromTorrage(torrent, torrentFile);
+            TorrageTorrentDownloader torrageTorrentDownloader = new TorrageTorrentDownloader();
+            torrageTorrentDownloader.download(torrent, torrentFile);
             return torrentFile;
         } catch (InvalidBEncodingException e) {
             Log.debug("torrage", "unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\"");
@@ -98,40 +100,6 @@ public class Blast3r {
             Log.debug(e.getMessage(), e);
             throw new IOException("unable to download a valid torrent file for \"" + torrent.getTorrent_hash() + "\"", e);
         }
-    }
-
-    private void downloadFromStrike(Torrent torrent, File torrentFile) throws IOException {
-        Log.debug("strike api", "downloading the torrent file for \"" + torrent.getTorrent_hash() + "\"");
-        URL website = new URL(String.format(Main.getConfig().strikeDownloadURL, torrent.getTorrent_hash()));
-        download(website, torrentFile);
-    }
-
-    private void download(URL url, File torrentFile) throws IOException {
-        FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
-        Log.debug("downloading with URL: " + url.toString());
-        URLConnection connection;
-        if (Main.getConfig().proxy) {
-            Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(Main.getConfig().proxyIp, Main.getConfig().proxyPort));
-            connection = url.openConnection(proxy);
-        } else {
-            connection = url.openConnection();
-        }
-        if (!Main.getConfig().disableUserAgentSpoo) {
-            connection.setRequestProperty("User-Agent", Main.getConfig().userAgent);
-        }
-        ReadableByteChannel rbc = Channels.newChannel(connection.getInputStream());
-        FileOutputStream fos = new FileOutputStream(torrentFile.getAbsoluteFile());
-        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-        fos.close();
-        rbc.close();
-        SharedTorrent sharedTorrent = SharedTorrent.fromFile(torrentFile, new File(Main.getConfig().downloadDirectory));
-        sharedTorrent.close();
-    }
-
-    private void downloadFromTorrage(Torrent torrent, File torrentFile) throws IOException {
-        Log.debug("torrage", "downloading the torrent file for \"" + torrent.getTorrent_hash() + "\"");
-        URL website = new URL(String.format(Main.getConfig().torrageURL, torrent.getTorrent_hash()));
-        download(website, torrentFile);
     }
 
     public List<String> getPeers(Torrent torrent) throws IOException {
