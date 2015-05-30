@@ -11,6 +11,18 @@ import java.util.List;
 public class Config {
 
     @Expose
+    @Option(name = "--hash", usage = "Run a search with the specified info hashes as targets.")
+    public List<String> hashes = new ArrayList<String>();
+    @Expose
+    @Option(name = "--query", usage = "Run a search with the specified query strings as targets.")
+    public List<String> queries = new ArrayList<String>();
+    @Expose
+    @Option(name = "--delete-torrents-on-exit", aliases = {"-dtoe"}, usage = "If blast3r should delete the downloaded torrent files on exit")
+    public boolean deleteTorrentsOnExit = false;
+    @Expose
+    @Option(name = "-torrent-directory", usage = "The directory to save the downloaded torrent files to")
+    public String torrentDir = "torrents/";
+    @Expose
     @Option(name = "--strike-api-url", usage = "The strike api base url")
     public String apiUrl = "https://getstrike.net/api/v2/";
     @Expose
@@ -44,7 +56,7 @@ public class Config {
     @Option(name = "--target-directory", aliases = {"-td"}, usage = "The directory which holds the target files")
     public String targetDirectory = "targets/";
     @Expose
-    @Argument(usage = "The names of the target files to load", required = true)
+    @Argument(usage = "The names of the target files to load")
     public List<String> targets = new ArrayList<String>();
     public boolean loadTargetsFromFiles = false;
     @Expose

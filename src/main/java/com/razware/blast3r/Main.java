@@ -32,18 +32,18 @@ public class Main {
             " | \\_\\ \\  |__/ __ \\_\\___ \\  |  | /       \\  | \\/\n" +
             " |___  /____(____  /____  > |__|/______  /__|   \n" +
             "     \\/          \\/     \\/             \\/       ";
-    public static final String notes =
+    public static final String NOTES =
             "This version supports searching strike for torrent information, and uses strike \n" +
                     "and torrage to download the required torrent files in order to discover peers  \n" +
                     "with ttorrent. If that fails (either no torrent file can be downloaded or is \n" +
                     "invalid), nmap is used.";
-    public static final String summary =
+    public static final String SUMMARY =
             "blast3r is a tool for finding torrents via json defined \"targets\" that contain \n" +
                     "a query (or info hash), and optional category and subcategory strings. The gathered\n" +
                     "information is saved in json files in the --data-directory. \n" +
                     "When blast3r looks up peers for a torrent, if a json file exists for it\n" +
                     "already, those peers are loaded, and added if unique to the new list.";
-    public static final String usageInfo = "Targets are defined as follows:\n" +
+    public static final String USAGE_INFO = "Targets are defined as follows:\n" +
             "In xubuntu14.04.json (under targets/):\n" +
             "    {\n" +
             "    \"name\" : \"xubuntu 14.04\",\n" +
@@ -55,7 +55,11 @@ public class Main {
             "\n" +
             "To look up all torrents on Strike with that query and fetch peer information from them:\n" +
             "    java -jar blast3r.jar --peers xubuntu14.04";
-    public static OS os = OS.getOS();
+    public static final String DISCLAIMER = "blast3r uses various open source technologies and data sources, including:\n" +
+            "\tttorrent   (http://mpetazzoni.github.io/ttorrent/),\n" +
+            "\tStrike API (https://getstrike.net/api/)\n" +
+            "\tand requires nmap for some optional functionality (https://nmap.org/).\n";
+    public static final OS os = OS.getOS();
     public static Blast3r blast3r;
     private static Config config = new Config();
     private static CmdLineParser cmdLineParser;
@@ -97,10 +101,32 @@ public class Main {
             printUsage();
             exit(0);
         }
+        if (config.targets.isEmpty() && config.queries.isEmpty()) {
+            Log.error("you must provide at least one hash, target, or query");
+            printUsage();
+            exit(1);
+        }
         Log.trace("starting");
         initLog4J();
         blast3r = new Blast3r();
         List<Target> targets = new ArrayList<Target>();
+        if (!config.queries.isEmpty()) {
+            for (String query : config.queries) {
+                Target target = new Target();
+                target.query = query;
+                target.name = query;
+                targets.add(target);
+            }
+        }
+        if (!config.hashes.isEmpty()) {
+            for (String hash : config.hashes) {
+                Target target = new Target();
+                target.query = hash;
+                target.name = hash;
+                target.hash = true;
+                targets.add(target);
+            }
+        }
         if (config.loadTargetsFromFiles) {
             Log.trace("loading targets from provided file list...");
             for (String filename : config.targets) {
@@ -116,12 +142,12 @@ public class Main {
         for (Target target : targets) {
             File dir = new File(config.dataDirectory + target.name + "/");
             FileUtils.forceMkdir(dir);
-            List<Torrent> torrents = new ArrayList<Torrent>();
+            List<Torrent> torrents;
             if (target.hash) {
-                Log.info("looking up " + target.query);
+                Log.info("looking up \"" + target.query + "\"");
                 torrents = blast3r.info(new String[]{target.query});
             } else {
-                Log.info("searching for " + target.query);
+                Log.info("searching for \"" + target.query + "\"");
                 torrents = blast3r.search(target);
             }
             Log.info("(" + torrents.size() + ") torrents found");
@@ -135,10 +161,11 @@ public class Main {
                 File file = new File(config.dataDirectory + target.name + "/" + torrent.getTorrent_hash() + ".json");
                 if (file.exists()) {
                     Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
-                    if (torrent1.getPeers().size() > 0) {
+                    if (torrent1 != null && torrent1.getPeers() != null && torrent1.getPeers().size() > 0) {
                         for (String p : torrent1.getPeers()) {
                             torrent.getPeers().add(p);
                         }
+                        Log.info("loaded (" + torrent1.getPeers().size() + ") existing peers records for \"" + torrent.getTorrent_hash() + "\"");
                     }
                     file.delete();
                 }
@@ -210,11 +237,11 @@ public class Main {
     }
 
     public static void printUsage() {
-        System.out.println(summary + "\n");
+        System.out.println(SUMMARY + "\n");
         if (config.info) {
-            System.out.println(usageInfo + "\n");
+            System.out.println(USAGE_INFO + "\n");
             if (config.getLogLevel().equals(MyLog.LogLevel.DEBUG)) {
-                System.out.println(notes + "\n");
+                System.out.println(NOTES + "\n");
             }
         }
         System.out.println("Usage:");
@@ -247,11 +274,7 @@ public class Main {
     public static void printBanner() {
         String banner = Main.ART + "\nversion " + Main.VERSION + "\n\t(C) 2015 Andrew Breksa [abreksa4@gmail.com]\n";
         System.out.println(banner);
-        System.out.println("blast3r uses various open source technologies and data sources, including:\n" +
-                "\tttorrent   (http://mpetazzoni.github.io/ttorrent/),\n" +
-                "\tStrike API (https://getstrike.net/api/)\n" +
-                "and requires nmap for some optional functionality (https://nmap.org/).\n" +
-                "See the \"--disable-nmap\" option.\n");
+        System.out.println(DISCLAIMER);
     }
 
 

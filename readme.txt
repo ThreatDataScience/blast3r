@@ -10,27 +10,13 @@ version 0
 blast3r uses various open source technologies and data sources, including:
 	ttorrent   (http://mpetazzoni.github.io/ttorrent/),
 	Strike API (https://getstrike.net/api/)
-and requires nmap for some optional functionality (https://nmap.org/).
-See the "--disable-nmap" option.
+	and requires nmap for some optional functionality (https://nmap.org/).
 
 blast3r is a tool for finding torrents via json defined "targets" that contain 
 a query (or info hash), and optional category and subcategory strings. The gathered
 information is saved in json files in the --data-directory. 
 When blast3r looks up peers for a torrent, if a json file exists for it
 already, those peers are loaded, and added if unique to the new list.
-
-Targets are defined as follows:
-In xubuntu14.04.json (under targets/):
-    {
-    "name" : "xubuntu 14.04",
-    "query" : "xubuntu 14.04",
-    "hash" : "false",
-    "category" : "",
-    "subcategory" : ""
-    }
-
-To look up all torrents on Strike with that query and fetch peer information from them:
-    java -jar blast3r.jar --peers xubuntu14.04
 
 Usage:
 	 java -jar blast3r.jar [OPTIONS] [TARGET FILE NAMES]
@@ -40,10 +26,15 @@ Options:
  VAL                                    : The names of the target files to load
  --data-directory (-datad) VAL          : The directory that holds the data
                                           files (default: data/)
+ --delete-torrents-on-exit (-dtoe)      : If blast3r should delete the
+                                          downloaded torrent files on exit
+                                          (default: false)
  --disable-nmap                         : disables using nmap to scan for peers
                                           (default: false)
  --download-directory (-downd) VAL      : The directory that holds the
                                           downloaded files (default: downloads/)
+ --hash VAL                             : Run a search with the specified info
+                                          hashes as targets.
  --help (-h, --?, -?)                   : Display this help text and exit
                                           (default: false)
  --info                                 : diaplay extra information in the help
@@ -61,6 +52,8 @@ Options:
                                           "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
  --peers (--get-peers)                  : Get the current peers of each torrent
                                           (default: false)
+ --query VAL                            : Run a search with the specified query
+                                          strings as targets.
  --save-config                          : Saves the provided config to disk
                                           (default: false)
  --strike-api-url VAL                   : The strike api base url (default:
@@ -85,3 +78,5 @@ Options:
                                           Mozilla/5.0 (Macintosh; U; Intel Mac
                                           OS X 10.4; en-US; rv:1.9.2.2)
                                           Gecko/20100316 Firefox/3.6.2)
+ -torrent-directory VAL                 : The directory to save the downloaded
+                                          torrent files to (default: torrents/)
