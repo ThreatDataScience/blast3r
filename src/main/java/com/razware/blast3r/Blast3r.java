@@ -19,8 +19,7 @@ import com.turn.ttorrent.common.Peer;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.URL;
+import java.net.*;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
@@ -105,9 +104,17 @@ public class Blast3r {
     private void download(URL url, File torrentFile) throws IOException {
         FileUtils.forceMkdir(new File(Main.getConfig().downloadDirectory));
         Log.debug("Downloading with URL: " + url.toString());
-        java.net.URLConnection c = url.openConnection();
-        c.setRequestProperty("User-Agent", Main.getConfig().userAgent);
-        ReadableByteChannel rbc = Channels.newChannel(c.getInputStream());
+        URLConnection connection;
+        if (Main.getConfig().proxy) {
+            Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(Main.getConfig().proxyIp, Main.getConfig().proxyPort));
+            connection = url.openConnection(proxy);
+        } else {
+            connection = url.openConnection();
+        }
+        if (!Main.getConfig().disableUserAgentSpoo) {
+            connection.setRequestProperty("User-Agent", Main.getConfig().userAgent);
+        }
+        ReadableByteChannel rbc = Channels.newChannel(connection.getInputStream());
         FileOutputStream fos = new FileOutputStream(torrentFile.getAbsoluteFile());
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         fos.close();
@@ -189,7 +196,7 @@ public class Blast3r {
             Log.warn("nmap", "needed to use nmap, but it was disabled...");
             return peers;
         }
-        Log.info("looking up peers for \"" + torrent.getTorrent_hash() + "\"");
+        Log.info("nmap", "looking up peers for \"" + torrent.getTorrent_hash() + "\"");
         Process process = new ProcessBuilder(
                 "/bin/sh", "-c", String.format(Main.getConfig().nmapCMD, torrent.getMagnet_uri())).start();
         Log.debug(String.format("command line: " + Main.getConfig().nmapCMD, torrent.getMagnet_uri()));

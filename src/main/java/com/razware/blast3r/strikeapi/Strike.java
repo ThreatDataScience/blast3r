@@ -7,6 +7,7 @@
 
 package com.razware.blast3r.strikeapi;
 
+import com.esotericsoftware.minlog.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
@@ -15,9 +16,7 @@ import com.sun.xml.internal.messaging.saaj.util.Base64;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
+import java.net.*;
 import java.util.List;
 
 public class Strike {
@@ -48,17 +47,29 @@ public class Strike {
 
     private String query(String string) throws Exception {
         URL url = new URL(Main.getConfig().apiUrl + string);
-        URLConnection connection = url.openConnection();
-        connection.setRequestProperty("User-Agent", Main.getConfig().userAgent);
-        connection.setConnectTimeout(60000);
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        StringBuilder response = new StringBuilder();
-        String inputLine;
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
+        URLConnection connection;
+        if (Main.getConfig().proxy) {
+            Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(Main.getConfig().proxyIp, Main.getConfig().proxyPort));
+            connection = url.openConnection(proxy);
+        } else {
+            connection = url.openConnection();
         }
-        in.close();
-        return response.toString();
+        if (!Main.getConfig().disableUserAgentSpoo) {
+            connection.setRequestProperty("User-Agent", Main.getConfig().userAgent);
+        }
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+            return response.toString();
+        } catch (Exception e) {
+            Log.error("strinke api", "unable to query API: " + e.getMessage(), e);
+            throw e;
+        }
     }
 
     public String description(String hash) throws Exception {

@@ -17,6 +17,18 @@ import java.util.List;
 public class Config {
 
     @Expose
+    @Option(name = "--disable-user-agent", usage = "Disables the user agent header from being set")
+    public boolean disableUserAgentSpoo = false;
+    @Expose
+    @Option(name = "--proxy-ip", usage = "The SOCKS proxy IP addres")
+    public String proxyIp = "";
+    @Expose
+    @Option(name = "--proxy-port", usage = "The SOCKS proxy port")
+    public int proxyPort = 0;
+    @Expose
+    @Option(name = "--proxy", usage = "If a SOCKS proxy should be used")
+    public boolean proxy = false;
+    @Expose
     @Option(name = "--loop", usage = "If blast3r should loop (update peer lists) until ctrl+C")
     public boolean loop = false;
     @Expose
@@ -93,6 +105,11 @@ public class Config {
     public void init() {
         if (!targets.isEmpty()) {
             loadTargetsFromFiles = true;
+        }
+        if (proxy) {
+            if (proxyIp.equals("") || proxyPort == 0) {
+                proxy = false;
+            }
         }
     }
 

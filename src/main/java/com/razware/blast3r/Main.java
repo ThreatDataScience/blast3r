@@ -187,8 +187,13 @@ public class Main {
                 List<Torrent> torrents;
                 //If target is a hash, run a single lookup
                 if (target.hash) {
-                    Log.info("looking up \"" + target.query + "\"");
-                    torrents = blast3r.info(new String[]{target.query});
+                    try {
+                        Log.info("looking up \"" + target.query + "\"");
+                        torrents = blast3r.info(new String[]{target.query});
+                    } catch (Exception e) {
+                        Log.error("unable to get info for " + target.query + ": " + e.getMessage(), e);
+                        continue;
+                    }
                 } else {
                     //Else it's a search string, and we want to look it up
                     Log.info("searching for \"" + target.query + "\"");
