@@ -57,7 +57,7 @@ Options:
  WARN | INFO | DEBUG | TRACE]              
  --log-to-file (-l2f)                   : If blast3r should log to a file
                                           (default: false)
- --nmap-coomand-line VAL                : The nmap command line to use to
+ --nmap-command-line VAL                : The nmap command line to use to
                                           discover peers (default: nmap
                                           --script bittorrent-discovery
                                           --script-args 'bittorrent-discovery.ma
