@@ -15,9 +15,22 @@ See the "--disable-nmap" option.
 
 blast3r is a tool for finding torrents via json defined "targets" that contain 
 a query (or info hash), and optional category and subcategory strings. The gathered
-information is saved in json files in the --data-directiry. 
+information is saved in json files in the --data-directory. 
 When blast3r looks up peers for a torrent, if a json file exists for it
 already, those peers are loaded, and added if unique to the new list.
+
+Targets are defined as follows:
+In xubuntu14.04.json (under targets/):
+    {
+    "name" : "xubuntu 14.04",
+    "query" : "xubuntu 14.04",
+    "hash" : "false",
+    "category" : "",
+    "subcategory" : ""
+    }
+
+To look up all torrents on Strike with that query and fetch peer information from them:
+    java -jar blast3r.jar --peers xubuntu14.04
 
 Usage:
 	 java -jar blast3r.jar [OPTIONS] [TARGET FILE NAMES]

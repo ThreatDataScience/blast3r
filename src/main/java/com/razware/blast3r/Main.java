@@ -40,9 +40,21 @@ public class Main {
     public static final String summary =
             "blast3r is a tool for finding torrents via json defined \"targets\" that contain \n" +
                     "a query (or info hash), and optional category and subcategory strings. The gathered\n" +
-                    "information is saved in json files in the --data-directiry. \n" +
+                    "information is saved in json files in the --data-directory. \n" +
                     "When blast3r looks up peers for a torrent, if a json file exists for it\n" +
                     "already, those peers are loaded, and added if unique to the new list.";
+    public static final String usageInfo = "Targets are defined as follows:\n" +
+            "In xubuntu14.04.json (under targets/):\n" +
+            "    {\n" +
+            "    \"name\" : \"xubuntu 14.04\",\n" +
+            "    \"query\" : \"xubuntu 14.04\",\n" +
+            "    \"hash\" : \"false\",\n" +
+            "    \"category\" : \"\",\n" +
+            "    \"subcategory\" : \"\"\n" +
+            "    }\n" +
+            "\n" +
+            "To look up all torrents on Strike with that query and fetch peer information from them:\n" +
+            "    java -jar blast3r.jar --peers xubuntu14.04";
     public static OS os = OS.getOS();
     public static Blast3r blast3r;
     private static Config config = new Config();
@@ -198,8 +210,9 @@ public class Main {
     }
 
     public static void printUsage() {
+        System.out.println(summary + "\n");
         if (config.info) {
-            System.out.println(summary + "\n");
+            System.out.println(usageInfo + "\n");
             if (config.getLogLevel().equals(MyLog.LogLevel.DEBUG)) {
                 System.out.println(notes + "\n");
             }
@@ -307,7 +320,7 @@ public class Main {
             try {
                 FileUtils.forceDeleteOnExit(new File(getConfig().downloadDirectory));
             } catch (IOException e) {
-                Log.error("error setting the downloads directory to delete on exit: "+e.getMessage(), e);
+                Log.error("error setting the downloads directory to delete on exit: " + e.getMessage(), e);
             }
             for (Client client : Blast3r.clients) {
                 client.stop();
