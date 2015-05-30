@@ -48,7 +48,9 @@ public class MyLog extends Log.Logger {
         if (category != null) {
             builder.append(category);
         } else {
-            builder.append("*");
+            String string = Thread.currentThread().getStackTrace()[3].getClassName();
+            builder.append(string.substring(string.lastIndexOf(".") + 1));
+            //builder.append("*");
         }
         builder.append("]");
         builder.append(" " + message);

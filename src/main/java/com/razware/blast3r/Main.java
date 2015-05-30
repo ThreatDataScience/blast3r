@@ -10,8 +10,6 @@ package com.razware.blast3r;
 import com.esotericsoftware.minlog.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.razware.blast3r.models.Target;
-import com.razware.blast3r.strikeapi.Torrent;
 import com.razware.blast3r.system.Config;
 import com.razware.blast3r.system.MyLog;
 import com.razware.blast3r.system.OS;
@@ -25,8 +23,6 @@ import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The type Main.
@@ -137,105 +133,9 @@ public class Main {
         //Initialize the log4j appenders
         initLog4J();
         //Define instance
-        blast3r = new Blast3r();
-
-        //Gather targets
-        List<Target> targets = new ArrayList<Target>();
-
-        if (!config.queries.isEmpty()) {
-            for (String query : config.queries) {
-                Target target = new Target();
-                target.query = query;
-                target.name = query;
-                targets.add(target);
-            }
-        }
-        if (!config.hashes.isEmpty()) {
-            for (String hash : config.hashes) {
-                Target target = new Target();
-                target.query = hash;
-                target.name = hash;
-                target.hash = true;
-                targets.add(target);
-            }
-        }
-        if (config.loadTargetsFromFiles) {
-            Log.trace("loading targets from provided file list...");
-            for (String filename : config.targets) {
-                try {
-                    Target target = gson.fromJson(FileUtils.readFileToString(new File(config.targetDirectory + filename + ".json")), Target.class);
-                    targets.add(target);
-                    Log.debug("loaded target \"" + config.targetDirectory + filename + ".json" + "\":\n" + getGson().toJson(target));
-                } catch (IOException e) {
-                    Log.error("target file " + filename + " does not exist: " + e.getMessage(), e);
-                }
-            }
-        }
-        boolean x = true;
-        while (x) {
-            if (!Main.config.loop) {
-                x = false;
-            }
-            //for each target
-            for (Target target : targets) {
-
-                //Create the target's data directory
-                File dir = new File(config.dataDirectory + target.name + "/");
-                FileUtils.forceMkdir(dir);
-
-                //Get a list of Torrent objects
-                List<Torrent> torrents;
-                //If target is a hash, run a single lookup
-                if (target.hash) {
-                    try {
-                        Log.info("looking up \"" + target.query + "\"");
-                        torrents = blast3r.info(new String[]{target.query});
-                    } catch (Exception e) {
-                        Log.error("unable to get info for " + target.query + ": " + e.getMessage(), e);
-                        continue;
-                    }
-                } else {
-                    //Else it's a search string, and we want to look it up
-                    Log.info("searching for \"" + target.query + "\"");
-                    torrents = blast3r.search(target);
-                }
-                Log.info("(" + torrents.size() + ") torrents found");
-
-                //For each of the torrents,
-                for (Torrent torrent : torrents) {
-                    if (config.getPeers) {
-                        List<String> peers = blast3r.getPeers(torrent);
-                        for (String peer : peers) {
-                            torrent.getPeers().add(peer);
-                        }
-                    }
-
-                    //Write the torrent json to disk
-                    File file = new File(config.dataDirectory + target.name + "/" + torrent.getTorrent_hash() + ".json");
-                    //If we;ve already seen it
-                    if (file.exists()) {
-                        Torrent torrent1 = gson.fromJson(FileUtils.readFileToString(file), Torrent.class);
-                        int z = 0;
-                        //Load the peers from the exisitng json and save the new data
-                        if (torrent1 != null && torrent1.getPeers() != null && torrent1.getPeers().size() > 0) {
-                            for (String p : torrent1.getPeers()) {
-                                if (torrent.getPeers().contains(p)) {
-                                    torrent.getPeers().add(p);
-                                    z++;
-                                }
-                            }
-                            Log.info("loaded (" + z + ") unqiue existing peers records for \"" + torrent.getTorrent_hash() + "\"");
-                        }
-                        file.delete();
-                    }
-                    file.createNewFile();
-                    FileUtils.writeStringToFile(file, getGson().toJson(torrent));
-                }
-                //Save all torrents to the target for single file export
-                //target.torrents.addAll(torrents);
-                //Need to impliment
-            }
-        }
+        blast3r = new Blast3r(config);
+        blast3r.loadTargets();
+        blast3r.proccess();
     }
 
     public static void loadConfig() {
