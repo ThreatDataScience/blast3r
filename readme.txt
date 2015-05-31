@@ -77,6 +77,9 @@ Options:
                                           --script-args 'bittorrent-discovery.ma
                                           gnet="%s"' | grep -E -o
                                           "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
+ --nmap-path VAL                        : The nmap executable path for Windows
+                                          users (default: C:\Program Files
+                                          (x86)\Nmap\nmap.exe)
  --peers (--get-peers)                  : Get the current peers of each torrent
                                           (default: false)
  --proxy                                : If a SOCKS proxy should be used

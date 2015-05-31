@@ -18,7 +18,7 @@ public class Config {
 
     @Expose
     @Option(name = "--nmap-path", usage = "The nmap executable path for Windows users")
-    public String nmapPath = "C:\\Program Files (x86)\\Nmap\\";
+    public String nmapPath = "C:\\Program Files (x86)\\Nmap\\nmap.exe";
     @Expose
     @Option(name = "--disable-ttorrent", usage = "Disable temporarily downloading the torrent content to discovery peers")
     public boolean disableTTorrent = false;

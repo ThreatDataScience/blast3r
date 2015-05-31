@@ -33,7 +33,7 @@ public class NMapPeerFinder implements IPeerFinder {
         Process process;
         switch (Main.os) {
             case Windows:
-                process = new ProcessBuilder(Main.getConfig().nmapPath.concat("nmap.exe"), "-c", String.format(Main.getConfig().nmapCMD, torrent.getMagnet_uri())).start();
+                process = new ProcessBuilder(Main.getConfig().nmapPath, "-c", String.format(Main.getConfig().nmapCMD, torrent.getMagnet_uri())).start();
                 break;
             default:
                 process = new ProcessBuilder(
