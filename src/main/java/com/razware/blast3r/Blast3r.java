@@ -36,6 +36,8 @@ public class Blast3r {
     todo: write a way to save the target's torrents to disk and load them like th peers?
     todo: fix the unhandled
     todo: find a way to remove out ip from the peer lists
+    todo: add some form of filtering base on torrent attributes
+    todo: make "session" presets for different cmapaigns
      */
 
     public static List<Client> clients = new ArrayList<Client>();
