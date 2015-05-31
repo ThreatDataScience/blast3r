@@ -51,7 +51,11 @@ public class NMapPeerFinder implements IPeerFinder {
             peers.add(line);
         }
         while ((line = bre.readLine()) != null) {
-            Log.error(line);
+            if (line.equals("WARNING: No targets were specified, so 0 hosts scanned.")) {
+                Log.debug(line);
+            } else {
+                Log.error(line);
+            }
         }
         Log.info("nmap", "(" + peers.size() + ") peers found");
         return peers;

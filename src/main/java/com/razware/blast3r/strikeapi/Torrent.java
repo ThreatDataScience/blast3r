@@ -30,6 +30,15 @@ public class Torrent {
     private List<String> peers = new UniqueList<String>();
     private FileInfo file_info = new FileInfo();
 
+    public boolean equals(Object torrent) {
+        if (torrent instanceof Torrent) {
+            if (((Torrent) torrent).getTorrent_hash().equalsIgnoreCase(this.getTorrent_hash())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public String getTorrent_category() {
         return torrent_category;
     }
