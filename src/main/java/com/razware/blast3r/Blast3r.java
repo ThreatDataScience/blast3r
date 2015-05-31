@@ -45,14 +45,15 @@ public class Blast3r {
     public List<Target> targets = new ArrayList<Target>();
     public Config config;
 
-    Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
+    Thread.UncaughtExceptionHandler uncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
         public void uncaughtException(Thread th, Throwable ex) {
-            System.out.println("Uncaught exception: " + ex);
+            Log.error("Uncaught exception: " + ex.getMessage(), ex);
         }
     };
 
     public Blast3r(Config config) {
         this.config = config;
+        Thread.currentThread().setUncaughtExceptionHandler(uncaughtExceptionHandler);
     }
 
     private void processTarget(Target target) throws Exception {

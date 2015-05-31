@@ -12,11 +12,10 @@ blast3r uses various open source technologies and data sources, including:
 	Strike API (https://getstrike.net/api/)
 	and requires nmap for some optional functionality (https://nmap.org/).
 
-blast3r is a tool for finding torrents via json defined "targets" that contain 
-a query (or info hash), and optional category and subcategory strings. The gathered
-information is saved in json files in the --data-directory. 
-When blast3r looks up peers for a torrent, if a json file exists for it
-already, those peers are loaded, and added if unique to the new list.
+blast3r is a tool for finding torrents via json defined "targets" that contain a query (or info 
+hash), and optional category and subcategory strings. The gathered information is saved in 
+json files in the --data-directory. When blast3r looks up peers for a torrent, if a json file 
+exists for it already, those peers are loaded, and added if unique to the new list. 
 
 Targets are defined as follows:
 In xubuntu14.04.json (under targets/):
@@ -31,13 +30,15 @@ In xubuntu14.04.json (under targets/):
 To look up all torrents on Strike with that query and fetch peer information from them:
     java -jar blast3r.jar --peers xubuntu14.04
 
-Examples: 
+Example: 
+	 java -jar blast3r.jar -q "xubuntu 14.04" --peers --proxy --proxy-ip localhost 
+--proxy-port 1080
 
-	 java -jar blast3r.jar -q "xubuntu 14.04" --peers --proxy --proxy-ip localhost --proxy-port 1080
-
-Would search for torrent with the query "xubuntu 14.04", and using the socks proxy provided,
-download the required torrent information, download the torrent file if possible, and them discover
-as many peers as possible via ttorrent and nmap (user defined minimum an timeout).(NOTE: nmap and ttorrent traffic isn't routed through the proxy, so don't use --peers)
+Would search for torrent with the query "xubuntu 14.04", and using the 
+socks proxy provided, download the required torrent information, download the torrent file 
+if possible, and then discover as many peers as possible via ttorrent and nmap (user defined 
+minimum and timeout). (NOTE: nmap and ttorrent traffic isn't routed through the proxy, so 
+don't use --peers) 
 
 Usage:
 	 java -jar blast3r.jar [OPTIONS]

@@ -23,6 +23,7 @@ import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 /**
  * The type Main.
@@ -38,16 +39,9 @@ public class Main {
             " |___  /____(____  /____  > |__|/______  /__|   \n" +
             "     \\/          \\/     \\/             \\/       ";
     public static final String NOTES =
-            "This version supports searching strike for torrent information, and uses strike \n" +
-                    "and torrage to download the required torrent files in order to discover peers  \n" +
-                    "with ttorrent. If that fails (either no torrent file can be downloaded or is \n" +
-                    "invalid), nmap is used.";
+            "This version supports searching strike for torrent information, and uses strike and torrage to download the required torrent files in order to discover peers  with ttorrent. If that fails (either no torrent file can be downloaded or is invalid), nmap is used.";
     public static final String SUMMARY =
-            "blast3r is a tool for finding torrents via json defined \"targets\" that contain \n" +
-                    "a query (or info hash), and optional category and subcategory strings. The gathered\n" +
-                    "information is saved in json files in the --data-directory. \n" +
-                    "When blast3r looks up peers for a torrent, if a json file exists for it\n" +
-                    "already, those peers are loaded, and added if unique to the new list.";
+            "blast3r is a tool for finding torrents via json defined \"targets\" that contain a query (or info hash), and optional category and subcategory strings. The gathered information is saved in json files in the --data-directory. When blast3r looks up peers for a torrent, if a json file exists for it already, those peers are loaded, and added if unique to the new list.";
     public static final String USAGE_INFO = "Targets are defined as follows:\n" +
             "In xubuntu14.04.json (under targets/):\n" +
             "    {\n" +
@@ -64,7 +58,7 @@ public class Main {
             "\tttorrent   (http://mpetazzoni.github.io/ttorrent/),\n" +
             "\tStrike API (https://getstrike.net/api/)\n" +
             "\tand requires nmap for some optional functionality (https://nmap.org/).\n";
-
+    public static final String example = "Example: \n\t java -jar blast3r.jar -q \"xubuntu 14.04\" --peers --proxy --proxy-ip localhost --proxy-port 1080\n\nWould search for torrent with the query \"xubuntu 14.04\", and using the socks proxy provided, download the required torrent information, download the torrent file if possible, and then discover as many peers as possible via ttorrent and nmap (user defined minimum and timeout). (NOTE: nmap and ttorrent traffic isn't routed through the proxy, so don't use --peers)";
     public static final OS os = OS.getOS();
     public static Blast3r blast3r;
     private static Config config = new Config();
@@ -204,15 +198,10 @@ public class Main {
      * Print usage.
      */
     public static void printUsage() {
-        System.out.println(SUMMARY + "\n");
+        System.out.println(addLinebreaks(SUMMARY, 80) + "\n");
         if (config.info) {
             System.out.println(USAGE_INFO + "\n");
-            System.out.println("Examples: \n");
-            System.out.println("\t java -jar blast3r.jar -q \"xubuntu 14.04\" --peers --proxy --proxy-ip localhost --proxy-port 1080\n");
-            System.out.println("Would search for torrent with the query \"xubuntu 14.04\", and using the socks proxy provided,\n" +
-                    "download the required torrent information, download the torrent file if possible, and them discover\n" +
-                    "as many peers as possible via ttorrent and nmap (user defined minimum an timeout)." +
-                    "(NOTE: nmap and ttorrent traffic isn't routed through the proxy, so don't use --peers)\n");
+            System.out.println(addLinebreaks(example, 80) + "\n");
             if (config.getLogLevel().equals(MyLog.LogLevel.DEBUG)) {
                 System.out.println(NOTES + "\n");
             }
@@ -250,5 +239,19 @@ public class Main {
         System.out.println(DISCLAIMER);
     }
 
-
+    public static String addLinebreaks(String input, int maxLineLength) {
+        StringTokenizer tok = new StringTokenizer(input, " ");
+        StringBuilder output = new StringBuilder(input.length());
+        int lineLen = 0;
+        while (tok.hasMoreTokens()) {
+            String word = tok.nextToken();
+            if (lineLen + word.length() > maxLineLength) {
+                output.append("\n");
+                lineLen = 0;
+            }
+            output.append(word + " ");
+            lineLen += word.length();
+        }
+        return output.toString();
+    }
 }
