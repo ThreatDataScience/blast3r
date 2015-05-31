@@ -8,6 +8,7 @@
 package com.razware.blast3r.modules.PeerFinders;
 
 import com.esotericsoftware.minlog.Log;
+import com.google.gag.annotation.remark.LOL;
 import com.razware.blast3r.Main;
 import com.razware.blast3r.strikeapi.Torrent;
 
@@ -23,6 +24,7 @@ import java.util.List;
  */
 public class NMapPeerFinder implements IPeerFinder {
 
+    @LOL("I know, this is ridculous. But it works.")
     public List<String> getPeers(Torrent torrent) throws IOException, InterruptedException {
         List<String> peers = new ArrayList<String>();
         if (Main.blast3r.config.disableNmap) {
@@ -31,6 +33,7 @@ public class NMapPeerFinder implements IPeerFinder {
         }
         Log.debug("nmap", "looking up peers for \"" + torrent.getTorrent_hash() + "\"");
         Process process;
+        //todo: make this a change to a string, not process...
         switch (Main.os) {
             case Windows:
                 process = new ProcessBuilder(Main.getConfig().nmapPath, "-c", String.format(Main.getConfig().nmapCMD, torrent.getMagnet_uri())).start();

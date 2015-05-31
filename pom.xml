@@ -46,5 +46,10 @@
             <artifactId>ttorrent</artifactId>
             <version>1.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.gag</groupId>
+            <artifactId>gag</artifactId>
+            <version>1.0.1</version>
+        </dependency>
     </dependencies>
 </project>

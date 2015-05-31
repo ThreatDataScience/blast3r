@@ -134,8 +134,10 @@ public class Main {
         initLog4J();
         //Define instance
         blast3r = new Blast3r(config);
-        blast3r.loadTargets();
-        blast3r.proccess();
+        blast3r.loadTargets(getConfig().targets);
+        blast3r.loadHashes(getConfig().hashes);
+        blast3r.loadQueries(getConfig().queries);
+        blast3r.run();
     }
 
     public static void loadConfig() {
