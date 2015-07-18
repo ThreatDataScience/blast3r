@@ -11,6 +11,10 @@ blast3r uses various open source technologies and data sources, including:
 	ttorrent   (http://mpetazzoni.github.io/ttorrent/),
 	Strike API (https://getstrike.net/api/)
 	and requires nmap for some optional functionality (https://nmap.org/).
+	
+blast3r can be used for free as long as the data gained is not used commercially, 
+and the data, if publiclally avaialble, is obfuscated as to not reveal the identity of any user. 
+All data gained by use of the OS components falls under the respective tool's license as well. 
 
 blast3r is a tool for finding torrents via json defined "targets" that contain a query (or info 
 hash), and optional category and subcategory strings. The gathered information is saved in 
